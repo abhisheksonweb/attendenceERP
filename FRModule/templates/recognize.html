@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ cls.name }} &middot; Live Recognition</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <style>
+    body { margin: 0; background: var(--bg, #0f1419); }
+    .recognize-wrap { padding: 1rem; max-width: 1200px; margin: 0 auto; }
+    .recognize-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    .recognize-head h1 { font-size: 1.25rem; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="recognize-wrap">
+    <div class="recognize-head">
+      <div>
+        <h1>{{ cls.name }}</h1>
+        <span class="pill pill-ok">{{ cls.code }}</span>
+      </div>
+      <div class="page-actions">
+        <a href="{{ url_for('export_csv', class_id=cls.id, token=token) }}" class="btn btn-ghost btn-sm">Export CSV</a>
+        <span class="pill {{ 'pill-ok' if trained else 'pill-warn' }}">
+          {{ 'Model ready' if trained else 'No faces enrolled' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card feed-card">
+        <div class="card-head"><h2>Live Camera</h2></div>
+        <div class="feed-wrap">
+          <img id="liveFeed"
+               src="{{ url_for('class_video_feed', class_id=cls.id, token=token, mode='in') }}"
+               alt="Live camera feed"
+               data-feed-base="{{ url_for('class_video_feed', class_id=cls.id, token=token) }}" />
+        </div>
+        <p class="hint">
+          Green = IN &middot; Amber = OUT &middot; Grey = other class &middot; Red = unknown
+        </p>
+      </section>
+
+      <section class="card table-card">
+        <div class="card-head">
+          <h2>Today's Attendance</h2>
+          <span class="muted">{{ student_count }} enrolled</span>
+        </div>
+        <div class="table-scroll">
+          <table id="attendance-table"
+                 data-endpoint="{{ url_for('api_attendance', class_id=cls.id, token=token) }}">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Roll</th>
+                <th>Visits</th>
+                <th>First In</th>
+                <th>Last Out</th>
+                <th>Time In Class</th>
+                <th>Avg / Day</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in rows %}
+              <tr>
+                <td>{{ r.name }}</td>
+                <td>{{ r.roll_no }}</td>
+                <td>{{ r.sessions }}</td>
+                <td>{{ r.first_in }}</td>
+                <td>{{ r.last_out }}</td>
+                <td>{{ r.time_in_class }}</td>
+                <td>{{ r.avg_per_day }}</td>
+                <td><span class="status status-{{ r.status|lower }}">{{ r.status }}</span></td>
+              </tr>
+              {% else %}
+              <tr class="empty-row"><td colspan="8">No attendance recorded yet today.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script>
+(function () {
+  const feed = document.getElementById('liveFeed');
+  if (!feed) return;
+  const base = feed.getAttribute('data-feed-base') || '';
+  const params = new URLSearchParams(window.location.search);
+  const mode = (params.get('mode') || 'in').toLowerCase() === 'out' ? 'out' : 'in';
+  const sep = base.indexOf('?') >= 0 ? '&' : '?';
+  feed.src = base + sep + 'mode=' + encodeURIComponent(mode) + '&t=' + Date.now();
+})();
+  </script>
+</body>
+</html>

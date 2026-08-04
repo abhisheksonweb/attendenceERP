@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Login &middot; Face Attendance{% endblock %}
+{% block nav_login %}active{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <section class="card auth-card">
+    <div class="card-head"><h2>Recognition Login</h2></div>
+    <p class="hint">
+      Sign in to open the face recognition dashboard. Classes and students are
+      managed in the Medical College portal.
+    </p>
+    <form method="post" action="{{ url_for('login') }}" class="form">
+      <label>
+        Username
+        <input type="text" name="username" required autocomplete="username" />
+      </label>
+      <label>
+        Password
+        <input type="password" name="password" required autocomplete="current-password" />
+      </label>
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

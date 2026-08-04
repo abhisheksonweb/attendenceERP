@@ -1,0 +1,114 @@
+@model IReadOnlyList<ClassFormViewModel>
+@{
+    ViewData["Title"] = "Classes";
+    ViewData["Subtitle"] = "Create a batch, add students to it, then run face attendance for that class only";
+}
+
+
+<div class="mc-card mb-4">
+    <h5 class="mb-3"><i class="bi bi-lightning me-2 text-primary"></i>Quick Actions</h5>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="CreateClass" class="btn btn-primary">
+            <i class="bi bi-journal-plus me-1"></i> Create Class
+        </a>
+        @if (Model.Any())
+        {
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-plus me-1"></i> Add Student
+                </button>
+                <ul class="dropdown-menu">
+                    @foreach (var c in Model.Where(x => x.IsActive))
+                    {
+                        <li>
+                            <a class="dropdown-item" asp-action="CreateStudent" asp-route-classId="@c.Id">
+                                @c.Name <span class="text-muted small">(@c.Course)</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+        <a asp-action="Requests" class="btn btn-outline-secondary">
+            <i class="bi bi-inbox me-1"></i> Requests
+        </a>
+        <a asp-action="Students" class="btn btn-outline-secondary">
+            <i class="bi bi-people me-1"></i> All Students
+        </a>
+    </div>
+    <p class="small text-muted mb-0 mt-3">
+        Workflow: <strong>Create Class</strong> → <strong>Add Student</strong> → student enrolls face (no attendance) →
+        admin opens <strong>Face Recognition</strong> for that class to mark IN/OUT.
+        Students only view their attendance history; they cannot mark attendance.
+    </p>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <span class="text-muted">@Model.Count class(es)</span>
+    </div>
+    <a asp-action="CreateClass" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Create Class
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="mc-card text-center py-5">
+        <div class="icon-xl mx-auto mb-3" style="width:72px;height:72px;border-radius:18px;background:var(--mc-blue-soft);color:var(--mc-blue);display:grid;place-items:center;font-size:1.8rem;">
+            <i class="bi bi-journal-bookmark"></i>
+        </div>
+        <h3>No classes yet</h3>
+        <p class="text-muted">Create your first class (batch), then add students to it.</p>
+        <a asp-action="CreateClass" class="btn btn-primary">Create Class</a>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var c in Model)
+        {
+            <div class="col-md-6 col-xl-4">
+                <div class="mc-card stat-card h-100">
+                    <a asp-action="ClassDetail" asp-route-id="@c.Id" class="text-decoration-none text-reset">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="fw-bold fs-5">@c.Name</div>
+                                <span class="badge-soft">@c.Code</span>
+                            </div>
+                            @if (c.IsActive)
+                            {
+                                <span class="badge text-bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-secondary">Inactive</span>
+                            }
+                        </div>
+                        <div class="small text-muted mb-3">
+                            <div><i class="bi bi-building me-1"></i>@c.Department</div>
+                            <div><i class="bi bi-mortarboard me-1"></i>@c.Course · Sem @c.Semester</div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="stat-value" style="font-size:1.4rem;">@c.StudentCount</div>
+                                <div class="stat-label">Students</div>
+                            </div>
+                            <span class="btn btn-outline-primary btn-sm">
+                                Open <i class="bi bi-arrow-right"></i>
+                            </span>
+                        </div>
+                    </a>
+                    <div class="d-flex gap-2">
+                        <a asp-action="CreateStudent" asp-route-classId="@c.Id" class="btn btn-primary btn-sm flex-fill">
+                            <i class="bi bi-person-plus"></i> Add Student
+                        </a>
+                        <a asp-action="FaceRecognition" asp-route-id="@c.Id" class="btn btn-success btn-sm flex-fill">
+                            <i class="bi bi-camera-video"></i> Camera
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

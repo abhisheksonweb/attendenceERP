@@ -1,0 +1,61 @@
+@{
+    ViewData["Title"] = "Attendance Report";
+    ViewData["Subtitle"] = "Exportable attendance summary";
+    var stats = ViewBag.Stats as AttendanceStats;
+    var records = ViewBag.Records as IEnumerable<AttendanceRecordViewModel> ?? Enumerable.Empty<AttendanceRecordViewModel>();
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div></div>
+    <div class="btn-group">
+        <button type="button" class="btn btn-outline-primary btn-sm" disabled title="Coming soon">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
+        </button>
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="alert('Excel export will be available in a future release.');">
+            <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+        </button>
+    </div>
+</div>
+
+@if (stats is not null)
+{
+    <div class="row g-3 mb-3">
+        <div class="col-md-4"><div class="mc-card stat-card"><div class="stat-label">Present</div><div class="stat-value text-success" data-counter="@stats.PresentCount">0</div></div></div>
+        <div class="col-md-4"><div class="mc-card stat-card"><div class="stat-label">Absent</div><div class="stat-value text-danger" data-counter="@stats.AbsentCount">0</div></div></div>
+        <div class="col-md-4"><div class="mc-card stat-card"><div class="stat-label">Rate</div><div class="stat-value"><span data-counter="@stats.Percentage" data-decimals="1">0</span>%</div></div></div>
+    </div>
+}
+
+<div class="mc-card">
+    <h5 class="mb-3">Today's Records (@DateTime.Today.ToString("dd MMM yyyy"))</h5>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr><th>Student</th><th>Department</th><th>Status</th><th>Source</th></tr>
+            </thead>
+            <tbody>
+                @if (records.Any())
+                {
+                    foreach (var r in records)
+                    {
+                        var cls = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ? "text-bg-success" : "text-bg-danger";
+                        <tr>
+                            <td><strong>@r.StudentName</strong><br /><small>@r.StudentCode</small></td>
+                            <td>@r.Department</td>
+                            <td><span class="badge @cls">@r.Status</span></td>
+                            <td>@r.Source</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="4" class="text-center text-muted py-4">No records for today.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> All Reports</a>
+</div>

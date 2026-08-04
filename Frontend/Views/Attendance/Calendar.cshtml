@@ -1,0 +1,95 @@
+@model IReadOnlyList<AttendanceRecordViewModel>
+@{
+    var year = (int)(ViewBag.Year ?? DateTime.Today.Year);
+    var month = (int)(ViewBag.Month ?? DateTime.Today.Month);
+    var firstDay = new DateTime(year, month, 1);
+    var daysInMonth = DateTime.DaysInMonth(year, month);
+    var startOffset = (int)firstDay.DayOfWeek;
+    var monthName = firstDay.ToString("MMMM yyyy");
+    ViewData["Title"] = "Attendance Calendar";
+    ViewData["Subtitle"] = monthName;
+
+    var byDate = Model.GroupBy(r => r.Date.Date).ToDictionary(g => g.Key, g => g.ToList());
+}
+
+<div class="mc-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Year</label>
+            <input type="number" name="year" value="@year" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Month</label>
+            <select name="month" class="form-select">
+                @for (var m = 1; m <= 12; m++)
+                {
+                    <option value="@m" selected="@(m == month)">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Go</button>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a asp-action="Monthly" asp-route-year="@year" asp-route-month="@month" class="btn btn-outline-primary btn-sm">List View</a>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Today</a>
+        </div>
+    </form>
+</div>
+
+<div class="mc-card">
+    <div class="table-responsive">
+        <table class="table table-bordered mb-0 text-center" style="table-layout:fixed;">
+            <thead>
+                <tr class="table-light">
+                    @foreach (var dayName in new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })
+                    {
+                        <th>@dayName</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var day = 1;
+                    for (var row = 0; row < 6 && day <= daysInMonth; row++)
+                    {
+                        <tr style="height:90px;">
+                            @for (var col = 0; col < 7; col++)
+                            {
+                                var cellIndex = row * 7 + col;
+                                if (cellIndex < startOffset || day > daysInMonth)
+                                {
+                                    <td class="bg-light"></td>
+                                }
+                                else
+                                {
+                                    var current = new DateTime(year, month, day);
+                                    var records = byDate.GetValueOrDefault(current) ?? new List<AttendanceRecordViewModel>();
+                                    var present = records.Count(r => r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase));
+                                    var absent = records.Count - present;
+                                    <td class="align-top p-2 @(current.Date == DateTime.Today ? "bg-primary-subtle" : "")">
+                                        <div class="fw-bold small">@day</div>
+                                        @if (records.Any())
+                                        {
+                                            <div class="small mt-1">
+                                                <span class="badge text-bg-success">@present P</span>
+                                                @if (absent > 0)
+                                                {
+                                                    <span class="badge text-bg-danger">@absent A</span>
+                                                }
+                                            </div>
+                                        }
+                                    </td>
+                                    day++;
+                                }
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="mt-3 small text-muted">
+        <i class="bi bi-info-circle me-1"></i>P = Present count, A = Absent count for each day.
+    </div>
+</div>

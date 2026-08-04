@@ -1,0 +1,193 @@
+@model StudentFormViewModel
+@{
+    ViewData["Title"] = "Add Student";
+    ViewData["Subtitle"] = ViewBag.ClassName as string ?? "Register student into a class (batch)";
+    var lockedClass = !string.IsNullOrWhiteSpace(Model.ClassId);
+    var classes = ViewBag.Classes as IEnumerable<ClassFormViewModel> ?? Enumerable.Empty<ClassFormViewModel>();
+    var departments = ViewBag.Departments as IEnumerable<string> ?? Enumerable.Empty<string>();
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <div class="mc-card">
+            <form asp-action="CreateStudent" method="post" enctype="multipart/form-data" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="ClassId" class="form-label">Class <span class="text-danger">*</span></label>
+                        @if (lockedClass)
+                        {
+                            <input type="hidden" asp-for="ClassId" />
+                            <input type="text" class="form-control" value="@(ViewBag.ClassName ?? Model.ClassId)" readonly />
+                        }
+                        else
+                        {
+                            <select asp-for="ClassId" class="form-select" required>
+                                <option value="">-- Select class / batch --</option>
+                                @foreach (var c in classes)
+                                {
+                                    <option value="@c.Id" data-dept="@c.Department" data-course="@c.Course" data-sem="@c.Semester">@c.Name (@c.Code) · @c.Course</option>
+                                }
+                            </select>
+                        }
+                        <span asp-validation-for="ClassId" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="StudentId" class="form-label">Student ID</label>
+                        <input asp-for="StudentId" class="form-control" readonly />
+                        <div class="form-text">Auto: YY-Course-###</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="EnrollmentNumber" class="form-label">Enrollment Number</label>
+                        <input asp-for="EnrollmentNumber" class="form-control" readonly />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                        <input asp-for="Email" class="form-control" type="email" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Mobile" class="form-label">Mobile <span class="text-danger">*</span></label>
+                        <input asp-for="Mobile" class="form-control" />
+                        <span asp-validation-for="Mobile" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="DateOfBirth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                        <input asp-for="DateOfBirth" class="form-control" type="date" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                        <select asp-for="Gender" class="form-select" asp-items="Html.GetEnumSelectList<Gender>()"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="TemporaryPassword" class="form-label">Temporary Password</label>
+                        <input asp-for="TemporaryPassword" class="form-control" autocomplete="new-password" placeholder="Leave blank to auto-generate" />
+                        <span asp-validation-for="TemporaryPassword" class="text-danger small"></span>
+                        <div class="form-text">Optional — leave blank to generate a random password and email it to the student.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="profilePhoto">Face Photo</label>
+                        <input type="file" name="profilePhoto" id="profilePhoto" class="form-control" accept="image/*" />
+                        <div class="form-text">Optional — clear front-face photo for attendance camera. Profile picture is added later by the student.</div>
+                        <div class="mt-2">
+                            <img id="photoPreview" src="@(Model.ProfilePhotoPath ?? "")" alt="Preview"
+                                 class="rounded border @(string.IsNullOrEmpty(Model.ProfilePhotoPath) ? "d-none" : "")"
+                                 width="72" height="72" style="object-fit:cover;" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Department" class="form-label">Department <span class="text-danger">*</span></label>
+                        <select asp-for="Department" class="form-select" id="departmentSelect"
+                                data-selected="@Model.Department" required>
+                            <option value="">-- Select department --</option>
+                        </select>
+                        <span asp-validation-for="Department" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Course" class="form-label">Course <span class="text-danger">*</span></label>
+                        <select asp-for="Course" class="form-select" id="courseSelect"
+                                data-selected="@Model.Course" required disabled>
+                            <option value="">-- Select course --</option>
+                        </select>
+                        <span asp-validation-for="Course" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Semester" class="form-label">Semester <span class="text-danger">*</span></label>
+                        <select asp-for="Semester" class="form-select" id="semesterSelect"
+                                data-selected="@Model.Semester" required disabled>
+                            <option value="">-- Select semester --</option>
+                        </select>
+                        <span asp-validation-for="Semester" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="GuardianName" class="form-label">Guardian / Parent Name</label>
+                        <input asp-for="GuardianName" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="GuardianPhone" class="form-label">Guardian Phone</label>
+                        <input asp-for="GuardianPhone" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="GuardianEmail" class="form-label">Guardian Email</label>
+                        <input asp-for="GuardianEmail" class="form-control" type="email" />
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check mb-2">
+                            <input asp-for="ForcePasswordChange" class="form-check-input" />
+                            <label asp-for="ForcePasswordChange" class="form-check-label">
+                                Force student to change temporary password on first login
+                            </label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label">Active account</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> Add Student</button>
+                    @if (lockedClass)
+                    {
+                        <a asp-action="ClassDetail" asp-route-id="@Model.ClassId" class="btn btn-outline-secondary">Cancel</a>
+                    }
+                    else
+                    {
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+(function () {
+    const photo = document.getElementById('profilePhoto');
+    const preview = document.getElementById('photoPreview');
+    if (photo && preview) {
+        photo.addEventListener('change', function () {
+            const file = this.files && this.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            preview.src = url;
+            preview.classList.remove('d-none');
+        });
+    }
+
+    const dept = document.getElementById('departmentSelect');
+    const classSelect = document.getElementById('ClassId');
+    const course = document.getElementById('Course');
+    const semester = document.getElementById('Semester');
+    if (dept && classSelect) {
+        dept.addEventListener('change', function () {
+            const selected = this.value;
+            Array.from(classSelect.options).forEach(function (opt) {
+                if (!opt.value) return;
+                const match = !selected || (opt.getAttribute('data-dept') || '').toLowerCase() === selected.toLowerCase();
+                opt.hidden = !match;
+            });
+        });
+    }
+    if (classSelect && course && semester) {
+        classSelect.addEventListener('change', function () {
+            const opt = classSelect.options[classSelect.selectedIndex];
+            if (!opt || !opt.value) return;
+            if (dept) dept.value = opt.getAttribute('data-dept') || dept.value;
+            course.value = opt.getAttribute('data-course') || course.value;
+            semester.value = opt.getAttribute('data-sem') || semester.value;
+        });
+    }
+})();
+</script>
+}

@@ -1,0 +1,209 @@
+@model IReadOnlyList<AttendanceRecordViewModel>
+@{
+    ViewData["Title"] = "Attendance History";
+    ViewData["Subtitle"] = "Your complete attendance record";
+    var stats = ViewBag.Stats as AttendanceStats;
+    var pendingDates = ViewBag.PendingAttendanceDates as HashSet<string> ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    string ToHhMm(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        var parts = value.Trim().Split(':');
+        if (parts.Length < 2) return "";
+        if (!int.TryParse(parts[0], out var h) || !int.TryParse(parts[1], out var m)) return "";
+        return $"{h:00}:{m:00}";
+    }
+}
+
+@if (stats is not null)
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="mc-card stat-card h-100 text-center">
+                <div class="stat-label">Present</div>
+                <div class="stat-value text-success" data-counter="@stats.PresentCount">0</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mc-card stat-card h-100 text-center">
+                <div class="stat-label">Absent</div>
+                <div class="stat-value text-danger" data-counter="@stats.AbsentCount">0</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mc-card stat-card h-100 text-center">
+                <div class="stat-label">Overall %</div>
+                <div class="stat-value"><span data-counter="@stats.Percentage" data-decimals="1">0</span>%</div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="mc-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>In</th>
+                    <th>Out</th>
+                    <th>Source</th>
+                    <th>Department</th>
+                    <th>Course</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var r in Model.OrderByDescending(x => x.Date))
+                    {
+                        var isPresent = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase)
+                                        || r.Status.Equals("Late", StringComparison.OrdinalIgnoreCase);
+                        var isWeekOff = r.Status.Equals("WeekOff", StringComparison.OrdinalIgnoreCase);
+                        var cls = isPresent ? "text-bg-success"
+                            : isWeekOff ? "text-bg-secondary"
+                            : "text-bg-danger";
+                        var dateKey = r.Date.ToString("yyyy-MM-dd");
+                        var hasPending = pendingDates.Contains(dateKey);
+                        <tr>
+                            <td>@r.Date.ToString("dddd, dd MMM yyyy")</td>
+                            <td><span class="badge @cls">@(isWeekOff ? "Week Off" : r.Status)</span></td>
+                            <td class="text-success">@(r.FirstIn ?? "—")</td>
+                            <td class="text-danger">@(r.LastOut ?? "—")</td>
+                            <td>@r.Source</td>
+                            <td>@r.Department</td>
+                            <td>@r.Course</td>
+                            <td class="text-end">
+                                @if (hasPending)
+                                {
+                                    <span class="badge text-bg-warning" title="Waiting for admin review">Pending</span>
+                                }
+                                else if (isWeekOff)
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                                else if (!isPresent)
+                                {
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            title="Request Present"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#reportAttendanceModal"
+                                            data-kind="AbsentCorrection"
+                                            data-date="@dateKey"
+                                            data-date-label="@r.Date.ToString("dd MMM yyyy")"
+                                            data-in="@ToHhMm(r.FirstIn)"
+                                            data-out="@ToHhMm(r.LastOut)">
+                                        <i class="bi bi-flag"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            title="Regularize IN/OUT timing"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#reportAttendanceModal"
+                                            data-kind="TimingCorrection"
+                                            data-date="@dateKey"
+                                            data-date-label="@r.Date.ToString("dd MMM yyyy")"
+                                            data-in="@ToHhMm(r.FirstIn)"
+                                            data-out="@ToHhMm(r.LastOut)">
+                                        <i class="bi bi-clock-history"></i>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="8" class="text-center text-muted py-5">No attendance records found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="reportAttendanceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="ReportAttendance" method="post" class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportAttendanceLabel">Attendance request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="Date" id="reportDate" />
+                <input type="hidden" name="RequestKind" id="reportKind" value="AbsentCorrection" />
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="text" class="form-control" id="reportDateLabel" readonly />
+                </div>
+                <div id="timingFields" class="row g-2 mb-3 d-none">
+                    <div class="col-6">
+                        <label class="form-label" for="requestedIn">Requested In Time</label>
+                        <input type="time" name="RequestedInTime" id="requestedIn" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="requestedOut">Requested Out Time</label>
+                        <input type="time" name="RequestedOutTime" id="requestedOut" class="form-control" />
+                    </div>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label" for="reportReason">Reason <span class="text-danger">*</span></label>
+                    <textarea name="Reason" id="reportReason" class="form-control" rows="3" minlength="5" maxlength="500" required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i> Submit request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    function toHhMm(value) {
+        if (!value) return '';
+        var parts = String(value).trim().split(':');
+        if (parts.length < 2) return '';
+        var h = parseInt(parts[0], 10);
+        var m = parseInt(parts[1], 10);
+        if (isNaN(h) || isNaN(m)) return '';
+        return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    }
+
+    const modal = document.getElementById('reportAttendanceModal');
+    if (!modal) return;
+    modal.addEventListener('show.bs.modal', function (event) {
+        var btn = event.relatedTarget;
+        if (btn && btn.closest) btn = btn.closest('[data-kind]') || btn;
+        if (!btn || !btn.getAttribute) return;
+        const kind = btn.getAttribute('data-kind') || 'AbsentCorrection';
+        document.getElementById('reportDate').value = btn.getAttribute('data-date') || '';
+        document.getElementById('reportDateLabel').value = btn.getAttribute('data-date-label') || '';
+        document.getElementById('reportKind').value = kind;
+        document.getElementById('reportReason').value = '';
+        document.getElementById('reportAttendanceLabel').textContent =
+            kind === 'TimingCorrection' ? 'Regularize wrong timing' : 'Report missed attendance';
+        const timing = document.getElementById('timingFields');
+        const inEl = document.getElementById('requestedIn');
+        const outEl = document.getElementById('requestedOut');
+        if (kind === 'TimingCorrection') {
+            timing.classList.remove('d-none');
+            inEl.value = toHhMm(btn.getAttribute('data-in'));
+            outEl.value = toHhMm(btn.getAttribute('data-out'));
+        } else {
+            timing.classList.add('d-none');
+            inEl.value = '';
+            outEl.value = '';
+        }
+    });
+})();
+</script>
+}

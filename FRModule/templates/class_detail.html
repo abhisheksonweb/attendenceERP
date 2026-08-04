@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}{{ cls.name }} &middot; Face Attendance{% endblock %}
+{% block nav_classes %}active{% endblock %}
+
+{% block content %}
+<div class="crumbs">
+  <a href="{{ url_for('classes') }}">Recognition</a>
+  <span>/</span>
+  <span>{{ cls.name }}</span>
+  <span class="pill pill-ok">{{ cls.code }}</span>
+</div>
+
+<div class="page-actions">
+  <a href="{{ url_for('export_csv', class_id=cls.id) }}" class="btn btn-ghost">Export CSV</a>
+  <form method="post" action="{{ url_for('reload_models') }}" class="nav-form">
+    <button type="submit" class="btn btn-ghost">Reload Model</button>
+  </form>
+  <a href="{{ url_for('recognize', class_id=cls.id, token=recognize_token) }}" class="btn btn-ghost" target="_blank">Embed View</a>
+</div>
+
+<div class="grid">
+  <section class="card feed-card">
+    <div class="card-head">
+      <h2>Live Camera</h2>
+      <span class="pill {{ 'pill-ok' if trained else 'pill-warn' }}">
+        {{ 'Model ready' if trained else 'No faces enrolled yet' }}
+      </span>
+    </div>
+    <div class="page-actions" style="margin-bottom:0.75rem;">
+      <button type="button" id="btnCheckIn" class="btn">Check-In</button>
+      <button type="button" id="btnCheckOut" class="btn btn-ghost">Check-Out</button>
+      <span id="modeBanner" class="pill pill-ok">Check-In active</span>
+    </div>
+    <div class="feed-wrap">
+      <img id="liveFeed"
+           src="{{ url_for('class_video_feed', class_id=cls.id, mode='in') }}"
+           alt="Live camera feed"
+           data-feed-base="{{ url_for('class_video_feed', class_id=cls.id) }}" />
+    </div>
+    <p class="hint" id="modeHint">
+      Check-In: students stay <strong>IN</strong> until they appear on the Check-Out camera.
+      Green = IN &middot; Amber = OUT &middot; Grey = other class &middot; Red = unknown.
+    </p>
+  </section>
+
+  <section class="card table-card">
+    <div class="card-head">
+      <h2>Today's Attendance</h2>
+      <span class="muted">{{ student_count }} enrolled</span>
+    </div>
+    <div class="table-scroll">
+      <table id="attendance-table" data-endpoint="{{ url_for('api_attendance', class_id=cls.id) }}">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Roll</th>
+            <th title="Number of entry/exit visits today">Visits</th>
+            <th>First In</th>
+            <th>Last Out</th>
+            <th title="Total time in class today">Time In Class</th>
+            <th title="Average time in class per day (all days)">Avg / Day</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.name }}</td>
+            <td>{{ r.roll_no }}</td>
+            <td>{{ r.sessions }}</td>
+            <td>{{ r.first_in }}</td>
+            <td>{{ r.last_out }}</td>
+            <td>{{ r.time_in_class }}</td>
+            <td>{{ r.avg_per_day }}</td>
+            <td><span class="status status-{{ r.status|lower }}">{{ r.status }}</span></td>
+          </tr>
+          {% else %}
+          <tr class="empty-row"><td colspan="8">No attendance recorded yet today.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<section class="card ai-card"
+         data-ask-endpoint="{{ url_for('ai_ask', class_id=cls.id) }}"
+         data-report-endpoint="{{ url_for('ai_report', class_id=cls.id) }}">
+  <div class="card-head">
+    <h2>Attendance Assistant</h2>
+    <span class="pill {{ 'pill-ok' if ai_enabled else 'pill-warn' }}">
+      {{ 'LLM connected' if ai_enabled else 'Offline mode' }}
+    </span>
+  </div>
+
+  <div class="ai-actions">
+    <button type="button" id="ai-report-btn" class="btn btn-primary btn-sm">
+      Generate Report
+    </button>
+    <span class="hint">Ask about attendance in plain English.</span>
+  </div>
+
+  <div id="ai-chat" class="ai-chat" aria-live="polite"></div>
+
+  <div class="ai-suggestions">
+    {% for q in ai_examples %}
+    <button type="button" class="chip" data-q="{{ q }}">{{ q }}</button>
+    {% endfor %}
+  </div>
+
+  <form id="ai-form" class="ai-input">
+    <input type="text" id="ai-question" name="question" autocomplete="off"
+           placeholder="e.g. Who was absent today?" />
+    <button type="submit" class="btn btn-primary btn-sm">Ask</button>
+  </form>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Enrolled Students</h2></div>
+  <p class="hint muted">Student roster is synced from the Medical College portal.</p>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Roll No</th><th>Email</th><th>Phone</th><th>Enrolled At</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td>{{ s.name }}</td>
+          <td>{{ s.roll_no }}</td>
+          <td>{{ s.email or '-' }}</td>
+          <td>{{ s.phone or '-' }}</td>
+          <td>{{ s.created_at }}</td>
+          <td class="row-action">
+            <button type="button" class="btn btn-ghost btn-sm js-student-report"
+                    data-endpoint="{{ url_for('ai_student_report', class_id=cls.id, student_id=s.id) }}"
+                    data-name="{{ s.name }}">Report</button>
+          </td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="6">No students synced yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+<script src="{{ url_for('static', filename='ai.js') }}"></script>
+<script>
+(function () {
+  const feed = document.getElementById('liveFeed');
+  const btnIn = document.getElementById('btnCheckIn');
+  const btnOut = document.getElementById('btnCheckOut');
+  const banner = document.getElementById('modeBanner');
+  const hint = document.getElementById('modeHint');
+  if (!feed || !btnIn || !btnOut) return;
+  const base = feed.getAttribute('data-feed-base') || '';
+  function setMode(mode) {
+    const sep = base.indexOf('?') >= 0 ? '&' : '?';
+    feed.src = base + sep + 'mode=' + encodeURIComponent(mode) + '&t=' + Date.now();
+    if (mode === 'in') {
+      btnIn.classList.remove('btn-ghost');
+      btnOut.classList.add('btn-ghost');
+      if (banner) { banner.className = 'pill pill-ok'; banner.textContent = 'Check-In active'; }
+      if (hint) hint.innerHTML = 'Check-In: students stay <strong>IN</strong> until they appear on the Check-Out camera. Green = IN &middot; Amber = OUT &middot; Grey = other class &middot; Red = unknown.';
+    } else {
+      btnOut.classList.remove('btn-ghost');
+      btnIn.classList.add('btn-ghost');
+      if (banner) { banner.className = 'pill pill-warn'; banner.textContent = 'Check-Out active'; }
+      if (hint) hint.innerHTML = 'Check-Out: students who are IN are marked <strong>OUT</strong>. Already OUT students are ignored.';
+    }
+  }
+  btnIn.addEventListener('click', function () { setMode('in'); });
+  btnOut.addEventListener('click', function () { setMode('out'); });
+})();
+</script>
+{% endblock %}

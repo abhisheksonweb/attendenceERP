@@ -1,0 +1,16 @@
+@{
+    ViewData["Title"] = "Unsubscribe";
+    Layout = "_LayoutAuth";
+    var ok = ViewBag.Ok as bool? ?? false;
+    var message = ViewBag.Message as string ?? "";
+}
+
+<div class="auth-canvas">
+    <div class="auth-canvas__form">
+        <div class="auth-split__inner text-center">
+            <h1 class="auth-split__title">Parent Alerts</h1>
+            <p class="auth-split__subtitle @(ok ? "text-success" : "text-danger")">@message</p>
+            <a class="btn btn-outline-primary" href="/Account/Login">Back to Login</a>
+        </div>
+    </div>
+</div>

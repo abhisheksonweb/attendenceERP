@@ -1,0 +1,215 @@
+@model StudentDashboardViewModel
+@{
+    ViewData["Title"] = "Student Dashboard";
+    ViewData["Subtitle"] = $"Welcome, {Model.Name}";
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="mc-card d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <div class="fw-semibold">Today's face attendance</div>
+                <div class="small text-muted">Updates automatically when you are seen by the class camera</div>
+            </div>
+            <div class="text-end">
+                <span class="badge text-bg-secondary" id="todayStatus">Checking…</span>
+                <div class="small text-muted" id="todayMeta"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="mc-card stat-card h-100">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-label">Attendance %</div>
+                    <div class="stat-value"><span id="livePct" data-counter="@Model.AttendancePercentage" data-decimals="1">0</span>%</div>
+                </div>
+                <div class="icon"><i class="bi bi-graph-up"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="mc-card stat-card h-100">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-label">Present Days</div>
+                    <div class="stat-value text-success" id="livePresent" data-counter="@Model.PresentDays">0</div>
+                </div>
+                <div class="icon"><i class="bi bi-check-circle"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="mc-card stat-card h-100">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-label">Absent Days</div>
+                    <div class="stat-value text-danger" id="liveAbsent" data-counter="@Model.AbsentDays">0</div>
+                </div>
+                <div class="icon"><i class="bi bi-x-circle"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="mc-card stat-card h-100">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-label">Profile Complete</div>
+                    <div class="stat-value"><span data-counter="@Model.ProfileCompletionPercent">0</span>%</div>
+                </div>
+                <div class="icon"><i class="bi bi-person-check"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="mc-card h-100">
+            <h5 class="mb-3"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Attendance</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr><th>Date</th><th>Status</th><th>Source</th></tr>
+                    </thead>
+                    <tbody id="recentRows">
+                        @if (Model.RecentAttendance.Any())
+                        {
+                            foreach (var r in Model.RecentAttendance)
+                            {
+                                var isWeekOff = r.Status.Equals("WeekOff", StringComparison.OrdinalIgnoreCase);
+                                var cls = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ? "text-bg-success"
+                                    : isWeekOff ? "text-bg-secondary"
+                                    : "text-bg-danger";
+                                var label = isWeekOff ? "Week Off" : r.Status;
+                                <tr>
+                                    <td>@r.Date.ToString("dd MMM yyyy")</td>
+                                    <td><span class="badge @cls">@label</span></td>
+                                    <td>@r.Source</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="3" class="text-center text-muted py-4">No attendance records yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <a asp-action="AttendanceHistory" class="btn btn-link btn-sm mt-2">View full history <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="mc-card h-100">
+            <h5 class="mb-3"><i class="bi bi-lightning me-2 text-primary"></i>Quick Links</h5>
+            <div class="d-grid gap-2">
+                <a asp-action="Profile" class="btn btn-outline-primary"><i class="bi bi-person me-1"></i> My Profile</a>
+                <a asp-action="AttendanceHistory" class="btn btn-outline-primary"><i class="bi bi-calendar3 me-1"></i> Attendance History</a>
+                <a asp-action="Notifications" class="btn btn-outline-primary">
+                    <i class="bi bi-bell me-1"></i> Notifications
+                    @if (Model.UnreadNotifications > 0)
+                    {
+                        <span class="badge bg-danger ms-1">@Model.UnreadNotifications</span>
+                    }
+                </a>
+                @if (!Model.FaceRegistered)
+                {
+                    <a asp-controller="Student" asp-action="FaceEnrollment" class="btn btn-outline-secondary">
+                        <i class="bi bi-person-bounding-box me-1"></i> Face Enrollment
+                        <span class="badge bg-warning text-dark ms-1">Pending</span>
+                    </a>
+                }
+                else
+                {
+                    <div class="alert alert-success mb-0 py-2 small">
+                        <i class="bi bi-shield-check me-1"></i> Face registered
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mc-card">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+            <h6 class="mb-1">Total tracked days: @Model.TotalDays</h6>
+            <div class="progress" style="height:8px;max-width:320px;">
+                @{
+                    var pct = Model.TotalDays > 0 ? (Model.PresentDays * 100.0 / Model.TotalDays) : 0;
+                }
+                <div class="progress-bar bg-primary" style="width:@pct.ToString("F0")%"></div>
+            </div>
+        </div>
+        <span class="badge-soft" id="liveSummary">@Model.PresentDays present / @Model.AbsentDays absent</span>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const statusEl = document.getElementById('todayStatus');
+    const metaEl = document.getElementById('todayMeta');
+    const pctEl = document.getElementById('livePct');
+    const presentEl = document.getElementById('livePresent');
+    const absentEl = document.getElementById('liveAbsent');
+    const rowsEl = document.getElementById('recentRows');
+    const summaryEl = document.getElementById('liveSummary');
+
+    async function refreshLive() {
+        try {
+            const res = await fetch('@Url.Action("LiveToday", "Student")', { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) return;
+            const data = await res.json();
+
+            if (data.todayPresent) {
+                statusEl.className = 'badge text-bg-success';
+                statusEl.textContent = 'Present today';
+                metaEl.textContent = (data.todaySource || '') + (data.todayRemarks ? ' · ' + data.todayRemarks : '');
+            } else if (data.todayStatus) {
+                statusEl.className = 'badge text-bg-danger';
+                statusEl.textContent = data.todayStatus;
+                metaEl.textContent = data.todaySource || '';
+            } else {
+                statusEl.className = 'badge text-bg-secondary';
+                statusEl.textContent = 'Not marked yet';
+                metaEl.textContent = 'Waiting for camera recognition';
+            }
+
+            if (typeof data.attendancePercentage === 'number' && pctEl) {
+                pctEl.textContent = data.attendancePercentage.toFixed(1);
+            }
+            if (typeof data.presentDays === 'number' && presentEl) {
+                presentEl.textContent = data.presentDays;
+            }
+            if (typeof data.absentDays === 'number' && absentEl) {
+                absentEl.textContent = data.absentDays;
+            }
+            if (summaryEl && typeof data.presentDays === 'number' && typeof data.absentDays === 'number') {
+                summaryEl.textContent = data.presentDays + ' present / ' + data.absentDays + ' absent';
+            }
+
+            if (rowsEl && Array.isArray(data.recent) && data.recent.length) {
+                rowsEl.innerHTML = data.recent.map(function (r) {
+                    var status = (r.status || '');
+                    var lower = status.toLowerCase();
+                    var cls = lower === 'present' ? 'text-bg-success'
+                        : lower === 'weekoff' ? 'text-bg-secondary'
+                        : 'text-bg-danger';
+                    var label = lower === 'weekoff' ? 'Week Off' : status;
+                    const d = r.date ? new Date(r.date) : null;
+                    const dateLabel = d ? d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+                    return '<tr><td>' + dateLabel + '</td><td><span class="badge ' + cls + '">' + label + '</span></td><td>' + (r.source || '') + '</td></tr>';
+                }).join('');
+            }
+        } catch (_) { /* ignore transient errors */ }
+    }
+
+    refreshLive();
+    setInterval(refreshLive, 3000);
+})();
+</script>
+}

@@ -1,0 +1,71 @@
+@{
+    ViewData["Title"] = "Manage Roles";
+    ViewData["Subtitle"] = "Role-based access control overview";
+}
+
+<div class="row g-3">
+    @foreach (var role in Enum.GetValues<UserRole>())
+    {
+        var (icon, desc, features) = role switch
+        {
+            UserRole.SuperAdmin => ("bi-shield-fill-check", "Full system control", new[] { "Manage admins", "System settings", "Face modules", "Global reports" }),
+            UserRole.Admin => ("bi-person-workspace", "Department administration", new[] { "Student management", "Attendance review", "Profile requests", "Reports & notifications" }),
+            UserRole.Student => ("bi-mortarboard", "Self-service portal", new[] { "View attendance", "Update profile", "Request field changes", "Notifications" }),
+            _ => ("bi-person", "", Array.Empty<string>())
+        };
+        <div class="col-md-4">
+            <div class="mc-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="icon"><i class="bi @icon"></i></div>
+                    <div>
+                        <h5 class="mb-0">@role</h5>
+                        <small class="text-muted">@desc</small>
+                    </div>
+                </div>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var f in features)
+                    {
+                        <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>@f</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="mc-card mt-3">
+    <h5 class="mb-3"><i class="bi bi-diagram-3 me-2 text-primary"></i>Authorization Matrix</h5>
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th class="text-center">SuperAdmin</th>
+                    <th class="text-center">Admin</th>
+                    <th class="text-center">Student</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var rows = new[] {
+                        ("Dashboard", true, true, true),
+                        ("Manage Admins", true, false, false),
+                        ("Manage Students", true, true, false),
+                        ("Attendance Records", true, true, true),
+                        ("Face Modules", true, true, false),
+                        ("Reports", true, true, false)
+                    };
+                }
+                @foreach (var (feature, sa, ad, st) in rows)
+                {
+                    <tr>
+                        <td>@feature</td>
+                        <td class="text-center">@(sa ? Html.Raw("<i class='bi bi-check-lg text-success'></i>") : Html.Raw("<i class='bi bi-dash text-muted'></i>"))</td>
+                        <td class="text-center">@(ad ? Html.Raw("<i class='bi bi-check-lg text-success'></i>") : Html.Raw("<i class='bi bi-dash text-muted'></i>"))</td>
+                        <td class="text-center">@(st ? Html.Raw("<i class='bi bi-check-lg text-success'></i>") : Html.Raw("<i class='bi bi-dash text-muted'></i>"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

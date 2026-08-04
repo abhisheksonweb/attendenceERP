@@ -1,0 +1,190 @@
+@{
+    ViewData["Title"] = "Face Attendance";
+    ViewData["Subtitle"] = ViewBag.ClassName as string;
+    var url = ViewBag.RecognizeUrl as string;
+    var classId = ViewBag.ClassId as string;
+}
+
+
+<div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+    <a asp-action="ClassDetail" asp-route-id="@classId" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Back to Class
+    </a>
+    <form asp-action="SyncFaceModule" method="post" class="d-inline">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@classId" />
+        <button type="submit" class="btn btn-outline-primary btn-sm">Re-sync Roster</button>
+    </form>
+    @if (!string.IsNullOrWhiteSpace(url))
+    {
+        <button type="button" id="btnPortalCheckIn" class="btn btn-success btn-sm">
+            <i class="bi bi-box-arrow-in-right"></i> Check-In
+        </button>
+        <button type="button" id="btnPortalCheckOut" class="btn btn-outline-warning btn-sm">
+            <i class="bi bi-box-arrow-right"></i> Check-Out
+        </button>
+        <span class="badge text-bg-success align-self-center" id="modeBadge">Mode: Check-In</span>
+    }
+    <span class="badge text-bg-success align-self-center" id="liveBadge">Live sync every 3s</span>
+</div>
+
+@if (string.IsNullOrWhiteSpace(url))
+{
+    <div class="mc-card text-center py-5">
+        <h4>Face Recognition Module offline</h4>
+        <p class="text-muted mb-3">Start FRModule, then sync this class.</p>
+        <pre class="bg-light p-3 d-inline-block text-start">cd FRModule
+python app.py</pre>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="mc-card p-2">
+                <div class="d-flex justify-content-between align-items-center px-2 pt-2 mb-2">
+                    <h5 class="mb-0"><i class="bi bi-camera-video me-2"></i>Live Camera</h5>
+                    <span class="small text-muted" id="cameraModeHint">Check-In camera active</span>
+                </div>
+                <iframe id="frIframe"
+                        src="@url"
+                        data-base-url="@url"
+                        title="Face Recognition"
+                        style="width:100%;height:70vh;border:0;border-radius:12px;background:#0b1220;"></iframe>
+                <p class="small text-muted px-2 mb-2">
+                    Use the <strong>Check-In</strong> / <strong>Check-Out</strong> buttons above.
+                    Students stay IN until they appear on Check-Out. Attendance is marked only while this page is open.
+                </p>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="mc-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">Today (portal)</h5>
+                    <span class="small text-muted" id="syncClock">—</span>
+                </div>
+                <div class="mb-3">
+                    <span class="badge text-bg-primary" id="presentCount">0 present</span>
+                    <span class="badge text-bg-success" id="occupancyCount">0 in class</span>
+                    <span class="badge text-bg-warning" id="earlyCount">0 partial absent</span>
+                    <span class="badge text-bg-secondary" id="totalCount">0 students</span>
+                </div>
+                <div class="table-responsive" style="max-height:60vh;overflow:auto;">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Student</th>
+                                <th>Status</th>
+                                <th>In</th>
+                                <th>Out</th>
+                                <th>Duration</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody id="liveRows">
+                            <tr><td colspan="6" class="text-muted text-center">Waiting for faces…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+(function () {
+  const classId = '@classId';
+  const iframe = document.getElementById('frIframe');
+  const btnIn = document.getElementById('btnPortalCheckIn');
+  const btnOut = document.getElementById('btnPortalCheckOut');
+  const modeBadge = document.getElementById('modeBadge');
+  const cameraHint = document.getElementById('cameraModeHint');
+
+  function setMode(mode) {
+    if (!iframe) return;
+    const base = iframe.getAttribute('data-base-url') || iframe.src;
+    try {
+      const u = new URL(base, window.location.origin);
+      u.searchParams.set('mode', mode);
+      u.searchParams.set('t', String(Date.now()));
+      iframe.src = u.toString();
+    } catch (e) {
+      const sep = base.indexOf('?') >= 0 ? '&' : '?';
+      iframe.src = base + sep + 'mode=' + encodeURIComponent(mode) + '&t=' + Date.now();
+    }
+
+    if (btnIn && btnOut) {
+      if (mode === 'in') {
+        btnIn.className = 'btn btn-success btn-sm';
+        btnOut.className = 'btn btn-outline-warning btn-sm';
+        if (modeBadge) {
+          modeBadge.className = 'badge text-bg-success align-self-center';
+          modeBadge.textContent = 'Mode: Check-In';
+        }
+        if (cameraHint) cameraHint.textContent = 'Check-In camera active';
+      } else {
+        btnOut.className = 'btn btn-warning btn-sm';
+        btnIn.className = 'btn btn-outline-success btn-sm';
+        if (modeBadge) {
+          modeBadge.className = 'badge text-bg-warning align-self-center';
+          modeBadge.textContent = 'Mode: Check-Out';
+        }
+        if (cameraHint) cameraHint.textContent = 'Check-Out camera active';
+      }
+    }
+  }
+
+  if (btnIn) btnIn.addEventListener('click', function () { setMode('in'); });
+  if (btnOut) btnOut.addEventListener('click', function () { setMode('out'); });
+
+  if (!classId) return;
+  const tbody = document.getElementById('liveRows');
+  const clock = document.getElementById('syncClock');
+  const presentCount = document.getElementById('presentCount');
+  const totalCount = document.getElementById('totalCount');
+  const occupancyCount = document.getElementById('occupancyCount');
+  const earlyCount = document.getElementById('earlyCount');
+
+  async function poll() {
+    try {
+      const res = await fetch('@Url.Action("LiveAttendance", "Admin")?id=' + encodeURIComponent(classId));
+      if (!res.ok) return;
+      const data = await res.json();
+      if (clock) clock.textContent = 'Updated ' + data.syncedAt;
+      if (presentCount) presentCount.textContent = data.present + ' present';
+      if (totalCount) totalCount.textContent = data.total + ' students';
+      if (occupancyCount) occupancyCount.textContent = (data.occupancyInNow || 0) + ' in class';
+      if (earlyCount) earlyCount.textContent = (data.partialAbsent || data.earlyLeave || 0) + ' partial absent';
+      if (!tbody) return;
+      if (!data.rows || !data.rows.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center">No face attendance yet today.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.rows.map(function (r) {
+        const status = r.status || r.Status || '';
+        const name = r.studentName || r.StudentName || '';
+        const code = r.studentCode || r.StudentCode || '';
+        const source = r.source || r.Source || '';
+        const firstIn = r.firstIn || '—';
+        const lastOut = r.lastOut || '—';
+        const duration = r.duration || '—';
+        const isPartial = status === 'PartialAbsent' || r.earlyLeave;
+        const badge = status === 'Present' || status === 'Late'
+          ? 'text-bg-success'
+          : (isPartial || status === 'PartialAbsent' ? 'text-bg-warning' : 'text-bg-danger');
+        const statusLabel = status === 'PartialAbsent' ? 'Partial Absent' : status;
+        return '<tr><td><div class="fw-semibold">' + name + '</div><div class="small text-muted">' + code + '</div></td>'
+          + '<td><span class="badge ' + badge + '">' + statusLabel + '</span><div class="small text-muted">' + (r.remarks || '') + '</div></td>'
+          + '<td class="text-success">' + firstIn + '</td>'
+          + '<td class="text-danger">' + lastOut + '</td>'
+          + '<td>' + duration + '</td>'
+          + '<td><span class="badge text-bg-info">' + source + '</span></td></tr>';
+      }).join('');
+    } catch (e) { /* ignore */ }
+  }
+  poll();
+  setInterval(poll, 3000);
+})();
+</script>
+}

@@ -1,0 +1,124 @@
+@using MedicalCollege.Infrastructure.Frm
+@{
+    var cls = ViewBag.Class as ClassFormViewModel;
+    var portal = ViewBag.PortalRecords as IEnumerable<AttendanceRecordViewModel>
+                 ?? Enumerable.Empty<AttendanceRecordViewModel>();
+    var sessions = ViewBag.Sessions as IEnumerable<FrmSessionRow>
+                   ?? Enumerable.Empty<FrmSessionRow>();
+    ViewData["Title"] = "Attendance Log";
+    ViewData["Subtitle"] = cls is null ? "Complete IN / OUT history" : $"{cls.Name} · face visits & daily marks";
+}
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a asp-action="ClassDetail" asp-route-id="@cls?.Id" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Back to Class
+    </a>
+    <a asp-action="FaceRecognition" asp-route-id="@cls?.Id" class="btn btn-success btn-sm">
+        <i class="bi bi-camera-video"></i> Live Camera
+    </a>
+</div>
+
+<div class="mc-card mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h5 class="mb-0"><i class="bi bi-door-open me-2 text-primary"></i>Face IN / OUT sessions</h5>
+        <span class="badge text-bg-secondary">@sessions.Count() visit(s)</span>
+    </div>
+    <p class="small text-muted">Every time a student was recognized as IN or OUT on this class camera.</p>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Student</th>
+                    <th>Student ID</th>
+                    <th>In</th>
+                    <th>Out</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (sessions.Any())
+                {
+                    foreach (var s in sessions)
+                    {
+                        var badge = s.Status == "IN" ? "text-bg-success" : "text-bg-secondary";
+                        <tr>
+                            <td>@(DateTime.TryParse(s.Date, out var d) ? d.ToString("dd MMM yyyy") : s.Date)</td>
+                            <td class="fw-semibold">@s.Name</td>
+                            <td>@s.RollNo</td>
+                            <td class="text-success">@(string.IsNullOrWhiteSpace(s.EntryTime) ? "—" : s.EntryTime)</td>
+                            <td class="text-danger">@(string.IsNullOrWhiteSpace(s.ExitTime) ? "—" : s.ExitTime)</td>
+                            <td>@(s.Duration ?? "—")</td>
+                            <td><span class="badge @badge">@s.Status</span></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            No face sessions yet. Open the class camera and have students walk in/out.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mc-card">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h5 class="mb-0"><i class="bi bi-calendar-check me-2 text-primary"></i>Daily portal records</h5>
+        <span class="badge text-bg-secondary">@portal.Count() day(s)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Student</th>
+                    <th>Student ID</th>
+                    <th>Status</th>
+                    <th>In</th>
+                    <th>Out</th>
+                    <th>Duration</th>
+                    <th>Source</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (portal.Any())
+                {
+                    foreach (var r in portal)
+                    {
+                        var clsBadge = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ||
+                                       r.Status.Equals("Late", StringComparison.OrdinalIgnoreCase)
+                            ? "text-bg-success"
+                            : r.Status.Equals("PartialAbsent", StringComparison.OrdinalIgnoreCase)
+                                ? "text-bg-warning"
+                                : "text-bg-danger";
+                        var statusLabel = r.Status.Equals("PartialAbsent", StringComparison.OrdinalIgnoreCase)
+                            ? "Partial Absent"
+                            : r.Status;
+                        <tr>
+                            <td>@r.Date.ToString("dd MMM yyyy")</td>
+                            <td class="fw-semibold">@r.StudentName</td>
+                            <td>@r.StudentCode</td>
+                            <td><span class="badge @clsBadge">@statusLabel</span></td>
+                            <td class="text-success">@(r.FirstIn ?? "—")</td>
+                            <td class="text-danger">@(r.LastOut ?? "—")</td>
+                            <td>@(r.Duration ?? "—")</td>
+                            <td>@r.Source @(r.EarlyLeave || r.Status.Equals("PartialAbsent", StringComparison.OrdinalIgnoreCase) ? Html.Raw("<span class=\"badge text-bg-warning ms-1\">Partial absent</span>") : null)</td>
+                            <td class="small text-muted">@(r.Remarks ?? "—")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="9" class="text-center text-muted py-4">No portal attendance records yet.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

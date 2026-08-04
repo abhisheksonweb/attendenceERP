@@ -1,0 +1,36 @@
+@model IReadOnlyList<ActivityItemViewModel>
+@{
+    ViewData["Title"] = "Activity History";
+    ViewData["Subtitle"] = "Track your recent actions in the portal";
+}
+
+<div class="mc-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-nowrap">@item.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</td>
+                            <td class="fw-semibold">@item.Action</td>
+                            <td class="text-muted">@item.Description</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="3" class="text-center text-muted py-5">No activity recorded yet.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

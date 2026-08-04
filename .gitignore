@@ -1,0 +1,39 @@
+**/bin/
+**/obj/
+**/.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local secrets (never commit)
+**/appsettings.Local.json
+**/appsettings.*.Local.json
+**/secrets.json
+.env
+.env.*
+
+# Temp / scratch
+_tmp_*/
+_mvc_temp/
+_run_*.txt
+
+# Uploads & runtime data
+App_Data/*.tmp
+Frontend/wwwroot/uploads/profiles/*
+!Frontend/wwwroot/uploads/profiles/.gitkeep
+
+# Python / FR module
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/venv/
+**/env/
+FRModule/data/faces/
+FRModule/data/embeddings/
+FRModule/data/attendance.db
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini

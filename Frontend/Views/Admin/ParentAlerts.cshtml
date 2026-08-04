@@ -1,0 +1,83 @@
+@using MedicalCollege.Domain.Entities
+@{
+    ViewData["Title"] = "Parent Alerts";
+    ViewData["Subtitle"] = "Daily absence alerts (6:00 PM) by class";
+    var alerts = ViewBag.Alerts as IEnumerable<ParentAlert> ?? Enumerable.Empty<ParentAlert>();
+    var classes = ViewBag.Classes as IEnumerable<ClassFormViewModel> ?? Enumerable.Empty<ClassFormViewModel>();
+    var selectedClassId = ViewBag.SelectedClassId as string;
+}
+
+
+<div class="alert alert-info">
+    Parent email alerts are absence-only. The scheduler runs once daily at 6:00 PM and notifies parents of students who were not Present or Late that day. Alerts are stored on-premises for NMC compliance.
+</div>
+
+<div class="mc-card mb-3">
+    <form method="get" asp-action="ParentAlerts" class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label">Class</label>
+            <select name="classId" class="form-select" onchange="this.form.submit()">
+                <option value="">All classes</option>
+                @foreach (var c in classes.OrderBy(x => x.Name))
+                {
+                    if (string.Equals(c.Id, selectedClassId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@c.Id" selected>@c.Name (@c.Code)</option>
+                    }
+                    else
+                    {
+                        <option value="@c.Id">@c.Name (@c.Code)</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <a asp-action="ParentAlerts" class="btn btn-outline-secondary">Clear filter</a>
+        </div>
+    </form>
+</div>
+
+<div class="mc-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>Class</th>
+                    <th>Type</th>
+                    <th>Student</th>
+                    <th>Guardian</th>
+                    <th>Message</th>
+                    <th>Channel</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (alerts.Any())
+                {
+                    foreach (var a in alerts)
+                    {
+                        <tr>
+                            <td>@a.CreatedAt.ToLocalTime().ToString("dd MMM HH:mm")</td>
+                            <td class="small">@(a.ClassName ?? "—")</td>
+                            <td><span class="badge text-bg-secondary">@a.AlertType</span></td>
+                            <td class="fw-semibold">@a.StudentName</td>
+                            <td class="small">
+                                @(a.GuardianName ?? "—")<br />
+                                <span class="text-muted">@(a.GuardianPhone ?? a.GuardianEmail ?? "no contact")</span>
+                            </td>
+                            <td class="small">@a.Message</td>
+                            <td>
+                                @a.Channel
+                                <div class="small text-muted">@(a.DeliveryNote ?? "")</div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No parent alerts@(string.IsNullOrWhiteSpace(selectedClassId) ? " yet" : " for this class").</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

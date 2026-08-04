@@ -1,0 +1,158 @@
+@model ClassDetailViewModel
+@{
+    ViewData["Title"] = Model.Class.Name;
+    ViewData["Subtitle"] = $"{Model.Class.Code} · {Model.Class.Department}";
+}
+
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> All Classes</a>
+    <a asp-action="EditClass" asp-route-id="@Model.Class.Id" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> Edit Class</a>
+    <a asp-action="CreateStudent" asp-route-classId="@Model.Class.Id" class="btn btn-primary btn-sm"><i class="bi bi-person-plus"></i> Add Student</a>
+    <form asp-action="SyncFaceModule" method="post" class="d-inline">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Class.Id" />
+        <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-repeat"></i> Sync FR Module</button>
+    </form>
+    <a asp-action="FaceRecognition" asp-route-id="@Model.Class.Id" class="btn btn-success btn-sm">
+        <i class="bi bi-camera-video"></i> Face Recognition
+    </a>
+    <a asp-action="AttendanceLog" asp-route-id="@Model.Class.Id" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-clock-history"></i> Attendance Log (IN/OUT)
+    </a>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="mc-card stat-card"><div class="stat-label">Students</div><div class="stat-value" data-counter="@Model.Students.Count">0</div></div></div>
+    <div class="col-md-3"><div class="mc-card stat-card"><div class="stat-label">Present Today</div><div class="stat-value text-success" data-counter="@Model.TodayAttendance.Count(a => a.Status == "Present" || a.Status == "Late")">0</div></div></div>
+    <div class="col-md-3"><div class="mc-card stat-card"><div class="stat-label">Max / Min Duration</div><div class="stat-value" style="font-size:1.1rem;">@(Model.Class.MaxClassDurationMinutes?.ToString() ?? "—") / @(Model.Class.MinAttendanceMinutes?.ToString() ?? "—") <span class="small text-muted">min</span></div></div></div>
+    <div class="col-md-3"><div class="mc-card stat-card"><div class="stat-label">Face Sync</div><div class="stat-value" style="font-size:1.1rem;">@(Model.FrmSynced ? "Ready" : "Pending")</div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="mc-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Students in this class</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var s in Model.Students)
+                    {
+                        <tr>
+                            <td>@s.StudentId</td>
+                            <td>@s.Name</td>
+                            <td>@s.Email</td>
+                            <td>@(s.IsActive ? "Active" : "Inactive")</td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="StudentDetails" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">View</a>
+                                <form asp-action="DeleteStudent" method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete @s.Name (@s.StudentId)? This cannot be undone.');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@s.Id" />
+                                    <input type="hidden" name="classId" value="@Model.Class.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete student">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Students.Any())
+                    {
+                        <tr><td colspan="5" class="text-muted text-center py-4">No students in this class yet.</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="mc-card mb-3">
+            <h5>Today's Attendance</h5>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Student</th><th>Status</th><th>In</th><th>Out</th><th>Duration</th></tr></thead>
+                    <tbody>
+                    @foreach (var a in Model.TodayAttendance)
+                    {
+                        var statusBadge = a.Status == "PartialAbsent" ? "text-bg-warning"
+                            : (a.Status is "Present" or "Late" ? "text-bg-success" : "text-bg-secondary");
+                        <tr>
+                            <td>
+                                <div>@a.StudentName</div>
+                                <div class="small text-muted">@a.Source</div>
+                            </td>
+                            <td><span class="badge @statusBadge">@(a.Status == "PartialAbsent" ? "Partial Absent" : a.Status)</span></td>
+                            <td class="text-success">@(a.FirstIn ?? "—")</td>
+                            <td class="text-danger">@(a.LastOut ?? "—")</td>
+                            <td>@(a.Duration ?? "—")</td>
+                        </tr>
+                    }
+                    @if (!Model.TodayAttendance.Any())
+                    {
+                        <tr><td colspan="5" class="text-muted">No records yet. Use Face Recognition to mark attendance.</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <a asp-action="AttendanceLog" asp-route-id="@Model.Class.Id" class="btn btn-link btn-sm px-0 mt-2">
+                Full attendance log <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        @{
+            var classNotes = ViewBag.Notifications as IEnumerable<NotificationViewModel> ?? Enumerable.Empty<NotificationViewModel>();
+        }
+        <div class="mc-card mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Class notifications</h5>
+                <a asp-action="Notifications" asp-route-classId="@Model.Class.Id" class="small">View all</a>
+            </div>
+            @if (classNotes.Any())
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var n in classNotes.Take(8))
+                    {
+                        <div class="list-group-item px-0 py-2">
+                            <div class="fw-semibold small">@n.Title</div>
+                            <div class="text-muted small">@n.Message</div>
+                            <div class="text-muted" style="font-size:.75rem;">@n.CreatedAt.ToLocalTime().ToString("dd MMM HH:mm")</div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small mb-0">No alerts for this class yet.</p>
+            }
+        </div>
+
+        <div class="mc-card">
+            <h5>Face Recognition</h5>
+            <p class="text-muted small">Open live camera for this class. For campus IP cameras, set CAMERA_SOURCE on FRModule.</p>
+            @if (!string.IsNullOrEmpty(Model.FaceRecognizeUrl))
+            {
+                <a asp-action="FaceRecognition" asp-route-id="@Model.Class.Id" class="btn btn-success w-100">
+                    <i class="bi bi-camera-video me-1"></i> Open Live Recognition
+                </a>
+            }
+            else
+            {
+                <div class="alert alert-warning mb-0 small">
+                    Start FRModule (`python app.py` in FRModule) then click Sync FR Module.
+                </div>
+            }
+        </div>
+    </div>
+</div>

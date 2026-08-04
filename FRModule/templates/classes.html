@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Classes &middot; Face Attendance{% endblock %}
+{% block nav_classes %}active{% endblock %}
+
+{% block content %}
+<div class="grid">
+  <section class="card">
+    <div class="card-head"><h2>Register a Class</h2></div>
+    <p class="hint">
+      Create a class you administer. You'll then add students to it with face
+      verification, and the camera will log their attendance.
+    </p>
+    <form method="post" action="{{ url_for('classes') }}" class="form">
+      <label>
+        Class name
+        <input type="text" name="name" required autocomplete="off"
+               placeholder="e.g. Computer Science - Sec A" />
+      </label>
+      <label>
+        Class code <span class="muted">(optional, auto-generated if blank)</span>
+        <input type="text" name="code" autocomplete="off" placeholder="e.g. CS-A01" />
+      </label>
+      <button type="submit" class="btn btn-primary">Register Class</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Your Classes</h2></div>
+    <div class="class-list">
+      {% for c in classes %}
+      <a class="class-tile" href="{{ url_for('class_detail', class_id=c.id) }}">
+        <div class="class-tile-head">
+          <span class="class-name">{{ c.name }}</span>
+          <span class="pill pill-ok">{{ c.code }}</span>
+        </div>
+        <div class="class-meta">
+          <span>{{ c.student_count }} student{{ '' if c.student_count == 1 else 's' }}</span>
+          <span class="muted">Created {{ c.created_at }}</span>
+        </div>
+      </a>
+      {% else %}
+      <p class="empty-note">No classes yet. Register your first class on the left.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

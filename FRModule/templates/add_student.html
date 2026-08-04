@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Add Student &middot; {{ cls.name }}{% endblock %}
+{% block nav_classes %}active{% endblock %}
+
+{% block content %}
+<div class="crumbs">
+  <a href="{{ url_for('classes') }}">Classes</a>
+  <span>/</span>
+  <a href="{{ url_for('class_detail', class_id=cls.id) }}">{{ cls.name }}</a>
+  <span>/</span>
+  <span>Add Student</span>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <div class="card-head"><h2>Step 1 &middot; Face Verification</h2></div>
+    <p class="hint">
+      Ask the student to look straight at the camera. Click <strong>Start Face
+      Capture</strong> to record several face samples. When verification
+      succeeds, a form pops up to fill in their details.
+    </p>
+    <div class="capture-controls">
+      <button type="button" class="btn btn-primary" id="capture-btn"
+              data-capture-url="{{ url_for('capture_face', class_id=cls.id) }}">
+        Start Face Capture
+      </button>
+      <span class="capture-status" id="capture-status"></span>
+    </div>
+  </section>
+
+  <section class="card feed-card">
+    <div class="card-head"><h2>Camera</h2></div>
+    <div class="feed-wrap">
+      <img src="{{ url_for('preview_feed') }}" alt="Live camera preview" />
+    </div>
+  </section>
+</div>
+
+<!-- Details popup (shown after successful face verification) -->
+<div class="modal-overlay" id="details-modal" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Step 2 &middot; Student Details</h2>
+      <button type="button" class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="verify-banner" id="verify-banner">Face verified successfully.</div>
+      <div class="preview-row">
+        <img id="face-preview" class="face-preview" alt="Captured face" />
+        <div class="preview-meta">
+          <span class="pill pill-ok" id="samples-pill">0 samples</span>
+          <p class="hint" id="duplicate-note" hidden></p>
+        </div>
+      </div>
+      <form id="details-form" class="form"
+            data-submit-url="{{ url_for('create_student', class_id=cls.id) }}">
+        <input type="hidden" name="token" id="capture-token" />
+        <label>
+          Full name
+          <input type="text" name="name" required autocomplete="off" />
+        </label>
+        <label>
+          Roll number
+          <input type="text" name="roll_no" required autocomplete="off" />
+        </label>
+        <label>
+          Email <span class="muted">(optional)</span>
+          <input type="email" name="email" autocomplete="off" />
+        </label>
+        <label>
+          Phone <span class="muted">(optional)</span>
+          <input type="text" name="phone" autocomplete="off" />
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-btn">Save Student</button>
+        </div>
+        <p class="capturing-note" id="form-error" hidden></p>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='capture.js') }}"></script>
+{% endblock %}

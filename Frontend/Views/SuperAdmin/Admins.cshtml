@@ -1,0 +1,82 @@
+@model IReadOnlyList<AdminFormViewModel>
+@{
+    ViewData["Title"] = "Administrators";
+    ViewData["Subtitle"] = "Create, edit, and manage admin accounts";
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div></div>
+    <a asp-action="CreateAdmin" class="btn btn-primary">
+        <i class="bi bi-person-plus me-1"></i> Create Admin
+    </a>
+</div>
+
+<div class="mc-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var admin in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                                        <i class="bi bi-person"></i>
+                                    </span>
+                                    <strong>@admin.FullName</strong>
+                                </div>
+                            </td>
+                            <td>@admin.Username</td>
+                            <td>@admin.Email</td>
+                            <td>
+                                @if (admin.IsActive)
+                                {
+                                    <span class="badge text-bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Disabled</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="EditAdmin" asp-route-id="@admin.Id" class="btn btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="ResetPassword" asp-route-id="@admin.Id" class="btn btn-outline-warning" title="Reset Password">
+                                        <i class="bi bi-key"></i>
+                                    </a>
+                                    @if (admin.IsActive)
+                                    {
+                                        <form asp-action="DisableAdmin" method="post" class="d-inline" onsubmit="return confirm('Disable this admin?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@admin.Id" />
+                                            <button type="submit" class="btn btn-outline-danger" title="Disable">
+                                                <i class="bi bi-person-x"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No administrators found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

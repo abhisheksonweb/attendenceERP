@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Face Attendance{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">FR</span>
+      <div>
+        <h1>Face Attendance</h1>
+        <p class="subtitle">Face Recognition &middot; Live Attendance</p>
+      </div>
+    </div>
+    <nav>
+      {% if current_admin %}
+        <a href="{{ url_for('classes') }}" class="{% block nav_classes %}{% endblock %}">Recognition</a>
+        <span class="nav-user">{{ current_admin['username'] }}</span>
+        <form method="post" action="{{ url_for('logout') }}" class="nav-form">
+          <button type="submit" class="btn btn-ghost btn-sm">Logout</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="{% block nav_login %}{% endblock %}">Login</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

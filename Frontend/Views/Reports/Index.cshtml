@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Reports";
+    ViewData["Subtitle"] = "Generate and export institutional reports";
+}
+
+<div class="row g-3">
+    <div class="col-md-6 col-lg-4">
+        <div class="mc-card h-100">
+            <div class="icon mb-3"><i class="bi bi-calendar-check"></i></div>
+            <h5>Attendance Report</h5>
+            <p class="text-muted small">Daily and cumulative attendance summaries with export options.</p>
+            <a asp-action="Attendance" class="btn btn-primary btn-sm">Open Report</a>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="mc-card h-100">
+            <div class="icon mb-3"><i class="bi bi-people"></i></div>
+            <h5>Student Report</h5>
+            <p class="text-muted small">Enrollment, profile completion, and registration status.</p>
+            <a asp-action="Students" class="btn btn-primary btn-sm">Open Report</a>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="mc-card h-100">
+            <div class="icon mb-3"><i class="bi bi-building"></i></div>
+            <h5>Department Report</h5>
+            <p class="text-muted small">Student distribution and attendance by department.</p>
+            <a asp-action="Departments" class="btn btn-primary btn-sm">Open Report</a>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="mc-card h-100">
+            <div class="icon mb-3"><i class="bi bi-journal-medical"></i></div>
+            <h5>Course Report</h5>
+            <p class="text-muted small">Breakdown by course and semester cohorts.</p>
+            <a asp-action="Courses" class="btn btn-primary btn-sm">Open Report</a>
+        </div>
+    </div>
+</div>
+
+<div class="mc-card mt-3">
+    <div class="alert alert-info mb-0">
+        <i class="bi bi-info-circle me-2"></i>
+        Export buttons on individual report pages are UI prototypes. Connect PDF/Excel generation endpoints when ready.
+    </div>
+</div>

@@ -1,0 +1,142 @@
+@model DashboardStatsViewModel
+@{
+    ViewData["Title"] = "Super Admin Dashboard";
+    ViewData["Subtitle"] = "System overview and administration";
+    var chartLabels = Model.WeeklyAttendance.Select(x => x.Label).ToArray();
+    var chartValues = Model.WeeklyAttendance.Select(x => x.Value).ToArray();
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="mc-card stat-card h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Total Admins</div>
+                    <div class="stat-value" data-counter="@Model.TotalAdmins">0</div>
+                </div>
+                <div class="icon"><i class="bi bi-person-badge"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="mc-card stat-card h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Active Admins</div>
+                    <div class="stat-value" data-counter="@Model.ActiveAdmins">0</div>
+                </div>
+                <div class="icon"><i class="bi bi-person-check"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="mc-card stat-card h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Total Students</div>
+                    <div class="stat-value" data-counter="@Model.TotalStudents">0</div>
+                </div>
+                <div class="icon"><i class="bi bi-people"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="mc-card stat-card h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Attendance Today</div>
+                    <div class="stat-value"><span data-counter="@Model.AttendancePercentage" data-decimals="1">0</span>%</div>
+                </div>
+                <div class="icon"><i class="bi bi-graph-up"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="mc-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="bi bi-bar-chart me-2 text-primary"></i>Weekly Attendance Trend</h5>
+            </div>
+            <canvas id="weeklyAttendance" height="120"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="mc-card h-100">
+            <h5 class="mb-3"><i class="bi bi-lightning me-2 text-primary"></i>Quick Actions</h5>
+            <div class="d-grid gap-2">
+                <a asp-action="CreateAdmin" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i> Create Admin</a>
+                <a asp-action="Admins" class="btn btn-outline-primary"><i class="bi bi-person-badge me-1"></i> Manage Admins</a>
+                <a asp-action="ManageSystem" class="btn btn-outline-primary"><i class="bi bi-gear me-1"></i> System Settings</a>
+                <a asp-action="ManageRoles" class="btn btn-outline-primary"><i class="bi bi-shield-lock me-1"></i> Manage Roles</a>
+                <a asp-controller="AiModules" asp-action="FaceEnrollment" class="btn btn-outline-secondary"><i class="bi bi-cpu me-1"></i> Face Modules</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mc-card">
+    <h5 class="mb-3"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Activities</h5>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>When</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.RecentActivities.Any())
+                {
+                    foreach (var item in Model.RecentActivities)
+                    {
+                        <tr>
+                            <td><strong>@item.ActorName</strong></td>
+                            <td><span class="badge-soft">@item.Action</span></td>
+                            <td class="text-muted">@item.Description</td>
+                            <td class="text-nowrap small">@item.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="4" class="text-muted text-center py-4">No recent activity recorded.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    var ctx = document.getElementById('weeklyAttendance');
+    if (!ctx) return;
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartLabels)),
+            datasets: [{
+                label: 'Attendance %',
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartValues)),
+                borderColor: '#0b6bcb',
+                backgroundColor: 'rgba(11,107,203,0.12)',
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
+            }
+        }
+    });
+})();
+</script>
+}

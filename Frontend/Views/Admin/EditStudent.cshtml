@@ -1,0 +1,148 @@
+@model StudentFormViewModel
+@{
+    ViewData["Title"] = "Edit Student";
+    ViewData["Subtitle"] = Model.Name;
+    var departments = ViewBag.Departments as IEnumerable<string> ?? Enumerable.Empty<string>();
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <div class="mc-card">
+            <form asp-action="EditStudent" method="post" enctype="multipart/form-data" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ProfilePhotoPath" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+                <div class="mb-3 d-flex align-items-center gap-3">
+                    <img id="photoPreview"
+                         src="@(string.IsNullOrEmpty(Model.ProfilePhotoPath) ? "" : Model.ProfilePhotoPath)"
+                         alt="Profile"
+                         class="rounded-circle border @(string.IsNullOrEmpty(Model.ProfilePhotoPath) ? "d-none" : "")"
+                         width="72" height="72" style="object-fit:cover;" />
+                    <span class="text-muted small">Current face preview (if any)</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="StudentId" class="form-label">Student ID <span class="text-danger">*</span></label>
+                        <input asp-for="StudentId" class="form-control" />
+                        <span asp-validation-for="StudentId" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="EnrollmentNumber" class="form-label">Enrollment Number <span class="text-danger">*</span></label>
+                        <input asp-for="EnrollmentNumber" class="form-control" />
+                        <span asp-validation-for="EnrollmentNumber" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                        <input asp-for="Email" class="form-control" type="email" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Mobile" class="form-label">Mobile <span class="text-danger">*</span></label>
+                        <input asp-for="Mobile" class="form-control" />
+                        <span asp-validation-for="Mobile" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="DateOfBirth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                        <input asp-for="DateOfBirth" class="form-control" type="date" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                        <select asp-for="Gender" class="form-select" asp-items="Html.GetEnumSelectList<Gender>()"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Department" class="form-label">Department <span class="text-danger">*</span></label>
+                        <select asp-for="Department" class="form-select" id="departmentSelect"
+                                data-selected="@Model.Department" required>
+                            <option value="">-- Select department --</option>
+                        </select>
+                        <span asp-validation-for="Department" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Course" class="form-label">Course <span class="text-danger">*</span></label>
+                        <select asp-for="Course" class="form-select" id="courseSelect"
+                                data-selected="@Model.Course" required disabled>
+                            <option value="">-- Select course --</option>
+                        </select>
+                        <span asp-validation-for="Course" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Semester" class="form-label">Semester <span class="text-danger">*</span></label>
+                        <select asp-for="Semester" class="form-select" id="semesterSelect"
+                                data-selected="@Model.Semester" required disabled>
+                            <option value="">-- Select semester --</option>
+                        </select>
+                        <span asp-validation-for="Semester" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="GuardianName" class="form-label">Guardian / Parent Name</label>
+                        <input asp-for="GuardianName" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="GuardianPhone" class="form-label">Guardian Phone</label>
+                        <input asp-for="GuardianPhone" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="GuardianEmail" class="form-label">Guardian Email</label>
+                        <input asp-for="GuardianEmail" class="form-control" type="email" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ClassId" class="form-label">Class <span class="text-danger">*</span></label>
+                        <select asp-for="ClassId" class="form-select">
+                            <option value="">-- Select class --</option>
+                            @if (ViewBag.Classes is IEnumerable<ClassFormViewModel> classes)
+                            {
+                                foreach (var c in classes)
+                                {
+                                    <option value="@c.Id">@c.Name (@c.Code)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="profilePhoto">Update Face Photo</label>
+                        <input type="file" name="profilePhoto" id="profilePhoto" class="form-control" accept="image/*" />
+                        <div class="form-text">Replaces face used for attendance recognition. Student profile picture is separate (student portal).</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label">Active account</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save Changes</button>
+                    <a asp-action="Students" class="btn btn-outline-secondary">Cancel</a>
+                    <a asp-action="StudentDetails" asp-route-id="@Model.Id" class="btn btn-outline-primary ms-auto">View Details</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+<script>
+(function () {
+    const photo = document.getElementById('profilePhoto');
+    const preview = document.getElementById('photoPreview');
+    if (!photo || !preview) return;
+    photo.addEventListener('change', function () {
+        const file = this.files && this.files[0];
+        if (!file) return;
+        preview.src = URL.createObjectURL(file);
+        preview.classList.remove('d-none');
+    });
+})();
+</script>
+}

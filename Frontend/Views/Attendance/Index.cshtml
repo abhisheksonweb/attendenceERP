@@ -1,0 +1,175 @@
+@using MedicalCollege.Web.Controllers
+@model IReadOnlyList<AttendanceRecordViewModel>
+@{
+    ViewData["Title"] = "Daily Attendance";
+    ViewData["Subtitle"] = "View and manage attendance records";
+    var date = ViewBag.Date as DateTime? ?? DateTime.Today;
+    var stats = ViewBag.Stats as AttendanceStats;
+    var visitLogs = ViewBag.VisitLogs as List<DailyVisitLogRow> ?? new List<DailyVisitLogRow>();
+    var visitCounts = ViewBag.VisitCounts as Dictionary<string, int>
+                      ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+}
+
+<div class="row g-3 mb-3">
+    @if (stats is not null)
+    {
+        <div class="col-md-3">
+            <div class="mc-card stat-card h-100">
+                <div class="stat-label">Present</div>
+                <div class="stat-value text-success" data-counter="@stats.PresentCount">0</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="mc-card stat-card h-100">
+                <div class="stat-label">Absent</div>
+                <div class="stat-value text-danger" data-counter="@stats.AbsentCount">0</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="mc-card stat-card h-100">
+                <div class="stat-label">IN/OUT Visits</div>
+                <div class="stat-value text-primary" data-counter="@visitLogs.Count">0</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="mc-card stat-card h-100">
+                <div class="stat-label">Attendance %</div>
+                <div class="stat-value"><span data-counter="@stats.Percentage" data-decimals="1">0</span>%</div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="mc-card mb-3">
+    <form method="get" asp-controller="Attendance" asp-action="Index" class="row g-2 align-items-end" id="attendanceDateForm">
+        <div class="col-md-4">
+            <label class="form-label">Select Date</label>
+            <input type="date" name="date" id="attendanceDate" value="@date.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i> Load</button>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <div class="btn-group">
+                <a asp-action="Monthly" class="btn btn-outline-primary btn-sm">Monthly</a>
+                <a asp-action="Calendar" class="btn btn-outline-primary btn-sm">Calendar</a>
+                <a asp-action="Statistics" class="btn btn-outline-primary btn-sm">Statistics</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    document.getElementById('attendanceDate')?.addEventListener('change', () => {
+        document.getElementById('attendanceDateForm')?.submit();
+    });
+</script>
+
+<div class="mc-card mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h5 class="mb-0"><i class="bi bi-door-open me-2 text-primary"></i>Complete IN / OUT logs — @date.ToString("dddd, dd MMMM yyyy")</h5>
+        <span class="badge text-bg-secondary">@visitLogs.Count visit(s)</span>
+    </div>
+    <p class="small text-muted mb-3">Every face recognition entry and exit for this day. Same student can appear multiple times.</p>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Visit #</th>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>In</th>
+                    <th>Out</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (visitLogs.Any())
+                {
+                    foreach (var v in visitLogs)
+                    {
+                        var badge = string.Equals(v.Status, "IN", StringComparison.OrdinalIgnoreCase)
+                            ? "text-bg-success"
+                            : "text-bg-secondary";
+                        <tr>
+                            <td><span class="badge text-bg-light border">#@v.VisitNo</span></td>
+                            <td>@v.RollNo</td>
+                            <td><strong>@v.Name</strong></td>
+                            <td>@v.ClassName</td>
+                            <td class="text-success">@(string.IsNullOrWhiteSpace(v.EntryTime) ? "—" : v.EntryTime)</td>
+                            <td class="text-danger">@(string.IsNullOrWhiteSpace(v.ExitTime) ? "—" : v.ExitTime)</td>
+                            <td>@(v.Duration ?? "—")</td>
+                            <td><span class="badge @badge">@v.Status</span></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            No face IN/OUT visits on @date.ToString("dd MMM yyyy"). Open a class camera and have students walk in/out.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mc-card">
+    <h5 class="mb-3"><i class="bi bi-calendar-check me-2 text-primary"></i>Daily summary for @date.ToString("dddd, dd MMMM yyyy")</h5>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Course</th>
+                    <th>Status</th>
+                    <th>Visits</th>
+                    <th>First In</th>
+                    <th>Last Out</th>
+                    <th>Source</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var r in Model.OrderBy(x => x.StudentName))
+                    {
+                        var cls = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ? "text-bg-success" : "text-bg-danger";
+                        visitCounts.TryGetValue(r.StudentCode ?? "", out var visits);
+                        <tr>
+                            <td>@r.StudentCode</td>
+                            <td><strong>@r.StudentName</strong></td>
+                            <td>@r.Department</td>
+                            <td>@r.Course</td>
+                            <td><span class="badge @cls">@r.Status</span></td>
+                            <td>
+                                @if (visits > 0)
+                                {
+                                    <span class="badge text-bg-primary">@visits</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td class="text-success">@(r.FirstIn ?? "—")</td>
+                            <td class="text-danger">@(r.LastOut ?? "—")</td>
+                            <td>@r.Source</td>
+                            <td class="small text-muted">@(r.Remarks ?? "—")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="10" class="text-center text-muted py-4">No attendance marked on @date.ToString("dd MMM yyyy"). Present/Absent stay 0 until face recognition or manual mark for that day.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

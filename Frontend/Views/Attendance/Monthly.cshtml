@@ -1,0 +1,86 @@
+@using System.Globalization
+@model IReadOnlyList<AttendanceRecordViewModel>
+@{
+    var year = (int)(ViewBag.Year ?? DateTime.Today.Year);
+    var month = (int)(ViewBag.Month ?? DateTime.Today.Month);
+    var monthName = new DateTime(year, month, 1).ToString("MMMM yyyy");
+    ViewData["Title"] = "Monthly Attendance";
+    ViewData["Subtitle"] = monthName;
+    var stats = ViewBag.Stats as AttendanceStats;
+}
+
+<div class="mc-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Year</label>
+            <input type="number" name="year" value="@year" class="form-control" min="2020" max="2030" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Month</label>
+            <select name="month" class="form-select">
+                @for (var m = 1; m <= 12; m++)
+                {
+                    <option value="@m" selected="@(m == month)">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">View</button>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Daily View</a>
+            <a asp-action="Calendar" asp-route-year="@year" asp-route-month="@month" class="btn btn-outline-primary btn-sm">Calendar</a>
+        </div>
+    </form>
+</div>
+
+@if (stats is not null)
+{
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="mc-card stat-card"><div class="stat-label">Month Present</div><div class="stat-value text-success" data-counter="@stats.PresentCount">0</div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="mc-card stat-card"><div class="stat-label">Month Absent</div><div class="stat-value text-danger" data-counter="@stats.AbsentCount">0</div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="mc-card stat-card"><div class="stat-label">Overall %</div><div class="stat-value"><span data-counter="@stats.Percentage" data-decimals="1">0</span>%</div></div>
+        </div>
+    </div>
+}
+
+<div class="mc-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Student</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Source</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var r in Model.OrderByDescending(x => x.Date))
+                    {
+                        var cls = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ? "text-bg-success" : "text-bg-danger";
+                        <tr>
+                            <td>@r.Date.ToString("dd MMM yyyy")</td>
+                            <td><strong>@r.StudentName</strong><br /><small class="text-muted">@r.StudentCode</small></td>
+                            <td>@r.Department</td>
+                            <td><span class="badge @cls">@r.Status</span></td>
+                            <td>@r.Source</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No records for @monthName.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

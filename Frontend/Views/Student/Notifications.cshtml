@@ -1,0 +1,49 @@
+@model IReadOnlyList<NotificationViewModel>
+@{
+    ViewData["Title"] = "Notifications";
+    ViewData["Subtitle"] = "Updates and alerts for your account";
+}
+
+<div class="d-flex justify-content-end mb-3">
+    <form asp-controller="Student" asp-action="MarkNotificationRead" method="post" class="d-none">
+        @Html.AntiForgeryToken()
+    </form>
+</div>
+
+<div class="mc-card">
+    @if (Model.Any())
+    {
+        <div class="list-group list-group-flush">
+            @foreach (var n in Model.OrderByDescending(x => x.CreatedAt))
+            {
+                <div class="list-group-item px-0 py-3 @(n.IsRead ? "" : "bg-light")">
+                    <div class="d-flex gap-3 align-items-start">
+                        <i class="bi bi-bell-fill text-primary"></i>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between flex-wrap gap-2">
+                                <h6 class="mb-1">@n.Title</h6>
+                                <small class="text-muted">@n.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                            </div>
+                            <p class="mb-2 text-muted">@n.Message</p>
+                            @if (!n.IsRead)
+                            {
+                                <form asp-action="MarkNotificationRead" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@n.Id" />
+                                    <button type="submit" class="btn btn-link btn-sm p-0">Mark as read</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-bell fs-1 d-block mb-2"></i>
+            You're all caught up — no notifications.
+        </div>
+    }
+</div>

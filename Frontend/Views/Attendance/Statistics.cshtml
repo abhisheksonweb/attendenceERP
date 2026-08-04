@@ -1,0 +1,88 @@
+@model AttendanceStats
+@{
+    ViewData["Title"] = "Attendance Statistics";
+    ViewData["Subtitle"] = "Overview and analytics";
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="mc-card stat-card h-100 text-center">
+            <div class="icon mx-auto mb-2"><i class="bi bi-person-check"></i></div>
+            <div class="stat-label">Total Present</div>
+            <div class="stat-value text-success" data-counter="@Model.PresentCount">0</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mc-card stat-card h-100 text-center">
+            <div class="icon mx-auto mb-2"><i class="bi bi-person-x"></i></div>
+            <div class="stat-label">Total Absent</div>
+            <div class="stat-value text-danger" data-counter="@Model.AbsentCount">0</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mc-card stat-card h-100 text-center">
+            <div class="icon mx-auto mb-2"><i class="bi bi-percent"></i></div>
+            <div class="stat-label">Overall Percentage</div>
+            <div class="stat-value"><span data-counter="@Model.Percentage" data-decimals="1">0</span>%</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="mc-card h-100">
+            <h5 class="mb-3"><i class="bi bi-pie-chart me-2 text-primary"></i>Present vs Absent</h5>
+            <canvas id="statsPie" height="200"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="mc-card h-100">
+            <h5 class="mb-3"><i class="bi bi-bar-chart me-2 text-primary"></i>Summary</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Total Records</span><strong>@Model.TotalCount</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Present</span><strong class="text-success">@Model.PresentCount</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Absent</span><strong class="text-danger">@Model.AbsentCount</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Attendance Rate</span><strong>@Model.Percentage.ToString("F1")%</strong>
+                </li>
+            </ul>
+            <div class="progress mt-3" style="height:12px;">
+                <div class="progress-bar bg-success" style="width:@Model.Percentage.ToString("F0")%"></div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <a asp-action="Index" class="btn btn-outline-primary btn-sm">Daily View</a>
+                <a asp-action="Monthly" class="btn btn-outline-primary btn-sm">Monthly View</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    var ctx = document.getElementById('statsPie');
+    if (!ctx) return;
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present', 'Absent'],
+            datasets: [{
+                data: [@Model.PresentCount, @Model.AbsentCount],
+                backgroundColor: ['#1f9d6a', '#d64545'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+})();
+</script>
+}

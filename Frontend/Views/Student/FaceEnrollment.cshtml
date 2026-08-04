@@ -1,0 +1,200 @@
+@{
+    ViewData["Title"] = "Face Enrollment";
+    ViewData["Subtitle"] = "Register your face for class attendance";
+    var student = ViewBag.Student as StudentFormViewModel;
+    var classInfo = ViewBag.ClassInfo as ClassFormViewModel;
+    var previewUrl = ViewBag.PreviewUrl as string ?? "";
+    var faceRegistered = ViewBag.FaceRegistered as bool? ?? false;
+}
+
+
+@if (student is null)
+{
+    <div class="alert alert-danger">Student profile not found.</div>
+}
+else if (string.IsNullOrWhiteSpace(student.ClassId) || classInfo is null)
+{
+    <div class="mc-card text-center py-5">
+        <div class="mb-3" style="font-size:2.5rem;color:var(--mc-blue);"><i class="bi bi-exclamation-triangle"></i></div>
+        <h4>No class assigned</h4>
+        <p class="text-muted mb-0">Ask your administrator to assign you to a class before enrolling your face.</p>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="mc-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="bi bi-camera-video me-2"></i>Camera Preview</h5>
+                    @if (faceRegistered)
+                    {
+                        <span class="badge text-bg-success">Face Registered</span>
+                    }
+                    else
+                    {
+                        <span class="badge text-bg-warning">Not Registered</span>
+                    }
+                </div>
+
+                <div class="position-relative bg-dark rounded-3 overflow-hidden mb-3" style="aspect-ratio:4/3;border:1px solid var(--mc-gray-2);">
+                    <img id="previewFeed" src="@previewUrl" alt="Camera preview" class="w-100 h-100" style="object-fit:cover;" />
+                    <div id="previewFallback" class="d-none position-absolute top-0 start-0 w-100 h-100 text-white d-flex flex-column align-items-center justify-content-center p-4 text-center" style="background:#0b1220;">
+                        <i class="bi bi-webcam fs-1 mb-2"></i>
+                        <div>Camera preview unavailable</div>
+                        <div class="small opacity-75">Start FRModule (<code>python app.py</code>) on this PC.</div>
+                    </div>
+                </div>
+
+                <div id="captureResult" class="d-none mb-3">
+                    <div class="d-flex gap-3 align-items-start">
+                        <img id="facePreview" alt="Captured face" class="rounded-3" style="width:120px;height:120px;object-fit:cover;border:2px solid var(--mc-blue);" />
+                        <div>
+                            <div class="fw-semibold text-success"><i class="bi bi-check-circle me-1"></i>Face captured</div>
+                            <div class="small text-muted" id="captureMeta"></div>
+                            <div id="duplicateWarn" class="alert alert-warning py-2 mt-2 mb-0 small d-none"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" id="btnCapture" class="btn btn-primary">
+                        <i class="bi bi-person-bounding-box me-1"></i>
+                        <span id="btnCaptureLabel">@(faceRegistered ? "Re-capture Face" : "Capture Face")</span>
+                    </button>
+                    <button type="button" id="btnRegister" class="btn btn-success" disabled>
+                        <i class="bi bi-save me-1"></i> Register Face
+                    </button>
+                </div>
+                <div id="statusMsg" class="small mt-3 text-muted"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="mc-card mb-3">
+                <h5>Your Details</h5>
+                <dl class="row mb-0 small">
+                    <dt class="col-5">Name</dt><dd class="col-7">@student.Name</dd>
+                    <dt class="col-5">Student ID</dt><dd class="col-7">@student.StudentId</dd>
+                    <dt class="col-5">Email</dt><dd class="col-7">@student.Email</dd>
+                    <dt class="col-5">Class</dt><dd class="col-7">@classInfo.Name <span class="badge-soft">@classInfo.Code</span></dd>
+                </dl>
+            </div>
+            <div class="mc-card">
+                <h5>How it works</h5>
+                <ol class="small mb-0 ps-3">
+                    <li class="mb-2">Sit in front of the PC webcam used by FRModule.</li>
+                    <li class="mb-2">Click <strong>Capture Face</strong> and look straight at the camera.</li>
+                    <li class="mb-2">Review the preview crop, then click <strong>Register Face</strong>.</li>
+                    <li class="mb-2">This only saves your face — it does <strong>not</strong> mark attendance.</li>
+                    <li>Attendance IN/OUT is marked later when your admin opens Face Recognition for your class.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<form id="afToken" class="d-none">@Html.AntiForgeryToken()</form>
+<script>
+(function () {
+  const preview = document.getElementById('previewFeed');
+  const fallback = document.getElementById('previewFallback');
+  if (preview) {
+    preview.addEventListener('error', function () {
+      preview.style.display = 'none';
+      if (fallback) fallback.classList.remove('d-none');
+    });
+  }
+
+  const tokenInput = document.querySelector('#afToken input[name="__RequestVerificationToken"]');
+  const btnCapture = document.getElementById('btnCapture');
+  const btnRegister = document.getElementById('btnRegister');
+  const statusMsg = document.getElementById('statusMsg');
+  const captureResult = document.getElementById('captureResult');
+  const facePreview = document.getElementById('facePreview');
+  const captureMeta = document.getElementById('captureMeta');
+  const duplicateWarn = document.getElementById('duplicateWarn');
+  const btnCaptureLabel = document.getElementById('btnCaptureLabel');
+  if (!btnCapture) return;
+
+  let captureToken = null;
+  let frmClassId = null;
+
+  function setStatus(text, isError) {
+    statusMsg.textContent = text || '';
+    statusMsg.className = 'small mt-3 ' + (isError ? 'text-danger' : 'text-muted');
+  }
+
+  btnCapture.addEventListener('click', async function () {
+    btnCapture.disabled = true;
+    btnRegister.disabled = true;
+    btnCaptureLabel.textContent = 'Capturing… look at camera';
+    setStatus('Capturing face samples. Hold still…');
+    captureResult.classList.add('d-none');
+    duplicateWarn.classList.add('d-none');
+
+    try {
+      const form = new FormData();
+      form.append('__RequestVerificationToken', tokenInput.value);
+      const res = await fetch('@Url.Action("CaptureFace", "Student")', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!data.ok) {
+        setStatus(data.error || 'Capture failed.', true);
+        btnCaptureLabel.textContent = 'Capture Face';
+        btnCapture.disabled = false;
+        return;
+      }
+      captureToken = data.token;
+      frmClassId = data.frmClassId;
+      if (data.preview) {
+        facePreview.src = data.preview;
+        captureResult.classList.remove('d-none');
+      }
+      captureMeta.textContent = (data.samples || 0) + ' face samples captured.';
+      if (data.duplicate) {
+        duplicateWarn.textContent = 'Similar face already enrolled as ' + data.duplicate.name + ' (' + data.duplicate.roll_no + '). You can still register for your account.';
+        duplicateWarn.classList.remove('d-none');
+      }
+      setStatus('Capture successful. Click Register Face to save.');
+      btnRegister.disabled = false;
+      btnCaptureLabel.textContent = 'Re-capture Face';
+    } catch (e) {
+      setStatus('Network error talking to face module.', true);
+      btnCaptureLabel.textContent = 'Capture Face';
+    }
+    btnCapture.disabled = false;
+  });
+
+  btnRegister.addEventListener('click', async function () {
+    if (!captureToken || !frmClassId) {
+      setStatus('Capture your face first.', true);
+      return;
+    }
+    btnRegister.disabled = true;
+    btnCapture.disabled = true;
+    setStatus('Registering face embedding…');
+    try {
+      const form = new FormData();
+      form.append('__RequestVerificationToken', tokenInput.value);
+      form.append('token', captureToken);
+      form.append('frmClassId', frmClassId);
+      const res = await fetch('@Url.Action("RegisterFace", "Student")', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!data.ok) {
+        setStatus(data.error || 'Registration failed.', true);
+        btnRegister.disabled = false;
+        btnCapture.disabled = false;
+        return;
+      }
+      setStatus(data.message || 'Face registered successfully.');
+      setTimeout(function () { window.location.reload(); }, 1000);
+    } catch (e) {
+      setStatus('Network error during registration.', true);
+      btnRegister.disabled = false;
+      btnCapture.disabled = false;
+    }
+  });
+})();
+</script>
+}

@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# App data (generated at runtime)
+data/faces/
+data/embeddings/
+data/attendance.db
+
+# OS / IDE
+.DS_Store
+Thumbs.db

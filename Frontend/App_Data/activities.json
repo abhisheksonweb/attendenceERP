@@ -1,0 +1,458 @@
+[
+  {
+    "id": "e11fb438770e4c2fa98fbb7b77b4791f",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Seed",
+    "description": "Seeded admin account only.",
+    "createdAt": "2026-07-15T11:03:45.9741071Z"
+  },
+  {
+    "id": "a1b2c3d4e5f6478990abcdef12345678",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Data Reset",
+    "description": "Cleared classes, students, and attendance for demo setup.",
+    "createdAt": "2026-07-21T07:30:00Z"
+  },
+  {
+    "id": "d30a9d3f9de24098bf3619118cc69795",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "CreateClass",
+    "description": "Created class phy (PHY-12)",
+    "createdAt": "2026-07-21T07:38:31.7981387Z"
+  },
+  {
+    "id": "3c0ee90dcd1946ea9302cc775b7b7fca",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "CreateClass",
+    "description": "Created class Chem (CHEM13)",
+    "createdAt": "2026-07-21T11:16:49.8155096Z"
+  },
+  {
+    "id": "7f642576ea174f11ae15914be3d1a929",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Chhaya (26-Btech-001) in class Chem. Email from admin@medcollege.edu to chhayak.revoceptsolutions@gmail.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to chhayak.revoceptsolutions@gmail.com.",
+    "createdAt": "2026-07-21T11:18:43.6816848Z"
+  },
+  {
+    "id": "97da98a43e1a4eecbb5e1f572abcb62c",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "CreateClass",
+    "description": "Auto-created class MBBS-Y1-A (MBBS-Y1-A) during CSV import",
+    "createdAt": "2026-07-21T11:35:10.7852374Z"
+  },
+  {
+    "id": "e73d436fb79e4f5a8ad552c048e2241e",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 1 (26-Mbbs-001) in class MBBS-Y1-A. Email from admin@medcollege.edu to student1@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student1@example.com.",
+    "createdAt": "2026-07-21T11:35:15.5341373Z"
+  },
+  {
+    "id": "e8eda54907f846b687c12659cdaf46a5",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "CreateClass",
+    "description": "Auto-created class MBBS-Y1-B (MBBS-Y1-B) during CSV import",
+    "createdAt": "2026-07-21T11:35:15.5452015Z"
+  },
+  {
+    "id": "8c8486703cfc4bfb85f16c3ffe4f0c97",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 2 (26-Mbbs-002) in class MBBS-Y1-B. Email from admin@medcollege.edu to student2@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student2@example.com.",
+    "createdAt": "2026-07-21T11:35:19.6837254Z"
+  },
+  {
+    "id": "ac325c3807654dd29b410d30a8194fee",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "CreateClass",
+    "description": "Auto-created class MBBS-Y2-A (MBBS-Y2-A) during CSV import",
+    "createdAt": "2026-07-21T11:35:19.6963962Z"
+  },
+  {
+    "id": "9cc67fbeb8714007bc41ff35d0d1a1f8",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 3 (26-Mbbs-003) in class MBBS-Y2-A. Email from admin@medcollege.edu to student3@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student3@example.com.",
+    "createdAt": "2026-07-21T11:35:23.726247Z"
+  },
+  {
+    "id": "8a38856ef7224d8181f7774195b619f8",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "CreateClass",
+    "description": "Auto-created class MBBS-Y2-B (MBBS-Y2-B) during CSV import",
+    "createdAt": "2026-07-21T11:35:23.7359698Z"
+  },
+  {
+    "id": "d400df7f9bf4420989f5f8af4176c6ed",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 4 (26-Mbbs-004) in class MBBS-Y2-B. Email from admin@medcollege.edu to student4@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student4@example.com.",
+    "createdAt": "2026-07-21T11:35:27.8146754Z"
+  },
+  {
+    "id": "e4ac5e2ffde6468aa06c504931d4e962",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "CreateClass",
+    "description": "Auto-created class MBBS-Y3-A (MBBS-Y3-A) during CSV import",
+    "createdAt": "2026-07-21T11:35:27.8255384Z"
+  },
+  {
+    "id": "546274354578446f961ab2c6ee0e60c4",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 5 (26-Mbbs-005) in class MBBS-Y3-A. Email from admin@medcollege.edu to student5@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student5@example.com.",
+    "createdAt": "2026-07-21T11:35:31.9495381Z"
+  },
+  {
+    "id": "c1f8dc56f07a43c2abbb9563ac6af852",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 6 (26-Mbbs-006) in class MBBS-Y1-A. Email from admin@medcollege.edu to student6@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student6@example.com.",
+    "createdAt": "2026-07-21T11:35:36.0157256Z"
+  },
+  {
+    "id": "2778c07b74514b3db2371de9c8ec747d",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 7 (26-Mbbs-007) in class MBBS-Y1-B. Email from admin@medcollege.edu to student7@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student7@example.com.",
+    "createdAt": "2026-07-21T11:35:41.0054553Z"
+  },
+  {
+    "id": "6bf880683279462e961a8aa7adf6080e",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 8 (26-Mbbs-008) in class MBBS-Y2-A. Email from admin@medcollege.edu to student8@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student8@example.com.",
+    "createdAt": "2026-07-21T11:35:45.8405486Z"
+  },
+  {
+    "id": "01ae75a5565a4ca3ac71bd78ff0a33df",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 9 (26-Mbbs-009) in class MBBS-Y2-B. Email from admin@medcollege.edu to student9@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student9@example.com.",
+    "createdAt": "2026-07-21T11:35:50.6586976Z"
+  },
+  {
+    "id": "e88925ecb3a445cca5dcb2730ea3612f",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 10 (26-Mbbs-010) in class MBBS-Y3-A. Email from admin@medcollege.edu to student10@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student10@example.com.",
+    "createdAt": "2026-07-21T11:35:55.591522Z"
+  },
+  {
+    "id": "144d61f126c845e6a5f45a996f32655a",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 11 (26-Mbbs-011) in class MBBS-Y1-A. Email from admin@medcollege.edu to student11@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student11@example.com.",
+    "createdAt": "2026-07-21T11:36:00.4838491Z"
+  },
+  {
+    "id": "b72c11333f1d44b2adde2a3903ff7dec",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 12 (26-Mbbs-012) in class MBBS-Y1-B. Email from admin@medcollege.edu to student12@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student12@example.com.",
+    "createdAt": "2026-07-21T11:36:04.6530011Z"
+  },
+  {
+    "id": "158b3411f4d04c32a423854ac79753ba",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 13 (26-Mbbs-013) in class MBBS-Y2-A. Email from admin@medcollege.edu to student13@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student13@example.com.",
+    "createdAt": "2026-07-21T11:36:05.8113592Z"
+  },
+  {
+    "id": "94ed8249c2794e5a9e26648ce012cabe",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 14 (26-Mbbs-014) in class MBBS-Y2-B. Email from admin@medcollege.edu to student14@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student14@example.com.",
+    "createdAt": "2026-07-21T11:36:09.6165575Z"
+  },
+  {
+    "id": "42e13ad83b4946a28ebe42a15c5cd6c1",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 15 (26-Mbbs-015) in class MBBS-Y3-A. Email from admin@medcollege.edu to student15@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student15@example.com.",
+    "createdAt": "2026-07-21T11:36:11.3874581Z"
+  },
+  {
+    "id": "f9b08a2fde3042adb9dea78c46465a01",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 16 (26-Mbbs-016) in class MBBS-Y1-A. Email from admin@medcollege.edu to student16@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student16@example.com.",
+    "createdAt": "2026-07-21T11:36:14.9676124Z"
+  },
+  {
+    "id": "1de5be60d4974cadba959a33b971be9b",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 17 (26-Mbbs-017) in class MBBS-Y1-B. Email from admin@medcollege.edu to student17@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student17@example.com.",
+    "createdAt": "2026-07-21T11:36:16.1865573Z"
+  },
+  {
+    "id": "3588f9e4e5224385b197315795502b20",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 18 (26-Mbbs-018) in class MBBS-Y2-A. Email from admin@medcollege.edu to student18@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student18@example.com.",
+    "createdAt": "2026-07-21T11:36:20.057119Z"
+  },
+  {
+    "id": "d5bd532a16734760bdb9a8843d34c29c",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 19 (26-Mbbs-019) in class MBBS-Y2-B. Email from admin@medcollege.edu to student19@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student19@example.com.",
+    "createdAt": "2026-07-21T11:36:20.7986231Z"
+  },
+  {
+    "id": "14a6651bfd434651bef0d922b2378a84",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 20 (26-Mbbs-020) in class MBBS-Y3-A. Email from admin@medcollege.edu to student20@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student20@example.com.",
+    "createdAt": "2026-07-21T11:36:24.739154Z"
+  },
+  {
+    "id": "6079f49b217f4c098ee93d617d19b76d",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 21 (26-Mbbs-021) in class MBBS-Y1-A. Email from admin@medcollege.edu to student21@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student21@example.com.",
+    "createdAt": "2026-07-21T11:36:25.9107117Z"
+  },
+  {
+    "id": "60b5077acb8944d399b137ca8aa2d04e",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 22 (26-Mbbs-022) in class MBBS-Y1-B. Email from admin@medcollege.edu to student22@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student22@example.com.",
+    "createdAt": "2026-07-21T11:36:30.1015729Z"
+  },
+  {
+    "id": "848eee6732dc47d4897d838514c67213",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 23 (26-Mbbs-023) in class MBBS-Y2-A. Email from admin@medcollege.edu to student23@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student23@example.com.",
+    "createdAt": "2026-07-21T11:36:30.6617514Z"
+  },
+  {
+    "id": "5530b528aef04f1c9a785e843e268a70",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 24 (26-Mbbs-024) in class MBBS-Y2-B. Email from admin@medcollege.edu to student24@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student24@example.com.",
+    "createdAt": "2026-07-21T11:36:34.9655612Z"
+  },
+  {
+    "id": "c22818682b254a38bf4901c90bbfaa64",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student CSV Import",
+    "description": "Imported 7/25 students from CSV.",
+    "createdAt": "2026-07-21T11:36:34.9801511Z"
+  },
+  {
+    "id": "1fb35917a9cc4405b1a08114aca60e4e",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Student 25 (26-Mbbs-025) in class MBBS-Y3-A. Email from admin@medcollege.edu to student25@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to student25@example.com.",
+    "createdAt": "2026-07-21T11:36:35.368149Z"
+  },
+  {
+    "id": "a3f817cf3abc4fdbaf57d59f3cf77b31",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student CSV Import",
+    "description": "Imported 18/25 students from CSV.",
+    "createdAt": "2026-07-21T11:36:35.373849Z"
+  },
+  {
+    "id": "a233df781c9f4fc99a6dcc6d80d6872c",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Profile Request Approved",
+    "description": "Approved Department update for Chhaya.",
+    "createdAt": "2026-07-21T11:38:53.4992529Z"
+  },
+  {
+    "id": "a1b93608ecc949348309b1398872a7b8",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Anu (26-Btech-002) in class Chem. Email from admin@medcollege.edu to anu@gmail.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to anu@gmail.com.",
+    "createdAt": "2026-07-22T09:59:52.9279728Z"
+  },
+  {
+    "id": "d4c79900aaf9444b86cdb44c998046e4",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Updated",
+    "description": "Updated student record for Anu (26-Btech-002).",
+    "createdAt": "2026-07-22T10:29:29.4878908Z"
+  },
+  {
+    "id": "7c9c6ef6feb44110bb37ff7d5d232067",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student CSV Import",
+    "description": "Imported 0/5 students from CSV.",
+    "createdAt": "2026-07-22T10:32:25.957245Z"
+  },
+  {
+    "id": "504d93c06aa64f7490b4b98d3e451004",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Nidhi Sharma (26-Mbbs-026) in class MBBS-Y1-A. Email from admin@medcollege.edu to nidhi.sharma@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to nidhi.sharma@example.com.",
+    "createdAt": "2026-07-22T10:34:29.0256062Z"
+  },
+  {
+    "id": "e292c8121932426bb1845eff14372983",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Aarav Verma (26-Mbbs-027) in class MBBS-Y1-A. Email from admin@medcollege.edu to aarav.verma@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to aarav.verma@example.com.",
+    "createdAt": "2026-07-22T10:34:33.7230089Z"
+  },
+  {
+    "id": "ea65883e49654472b34bbb3aa821cee0",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Priya Singh (26-Mbbs-028) in class MBBS-Y1-A. Email from admin@medcollege.edu to priya.singh@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to priya.singh@example.com.",
+    "createdAt": "2026-07-22T10:34:37.6746887Z"
+  },
+  {
+    "id": "e42f821445ea431b8eb72e6580c21f9b",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Rohan Gupta (26-Mbbs-029) in class MBBS-Y1-A. Email from admin@medcollege.edu to rohan.gupta@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to rohan.gupta@example.com.",
+    "createdAt": "2026-07-22T10:34:41.5187933Z"
+  },
+  {
+    "id": "6f82810b8ad64903a9a0b649fd766ff1",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Sneha Patel (26-Mbbs-030) in class MBBS-Y1-A. Email from admin@medcollege.edu to sneha.patel@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to sneha.patel@example.com.",
+    "createdAt": "2026-07-22T10:34:45.944373Z"
+  },
+  {
+    "id": "464fad7606454d7ea153c37d18639036",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student CSV Import",
+    "description": "Imported 5/5 students from CSV.",
+    "createdAt": "2026-07-22T10:34:45.9476505Z"
+  },
+  {
+    "id": "1b744ea1dc154ce7ba6659e1e2192659",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Updated",
+    "description": "Updated student record for Nidhi Sharma (26-Mbbs-026).",
+    "createdAt": "2026-07-22T10:35:26.1475398Z"
+  },
+  {
+    "id": "ac213d103927401388c8c88942b88675",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Riya Sharma (26-Mbbs-031) in class MBBS-Y1-A. Email from admin@medcollege.edu to riya.sharma@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to riya.sharma@example.com.",
+    "createdAt": "2026-07-22T11:53:16.9030236Z"
+  },
+  {
+    "id": "956a149d77aa4cea9b4ed8bf7dfb980d",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student CSV Import",
+    "description": "Imported 1/2 students from CSV.",
+    "createdAt": "2026-07-22T11:53:16.9078042Z"
+  },
+  {
+    "id": "a8cfbd04d1484f77a749978157d895eb",
+    "actorUserId": "d22f23ca4a2c422bb1770bd8a4ee4343",
+    "actorName": "Chhaya",
+    "action": "Attendance Timing Regularization",
+    "description": "Chhaya requested timing update for 22 Jul 2026: test hai",
+    "createdAt": "2026-07-22T12:55:07.7555689Z"
+  },
+  {
+    "id": "0e02cbfab0074bf6950c9698b28990d2",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Timing Regularization Approved",
+    "description": "Approved timing update for Chhaya on 22 Jul 2026.",
+    "createdAt": "2026-07-22T13:00:51.2483151Z"
+  },
+  {
+    "id": "174f5008b09d4e54b55676e169199722",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student CSV Import",
+    "description": "Imported 0/5 students from CSV.",
+    "createdAt": "2026-07-28T06:06:56.1511148Z"
+  },
+  {
+    "id": "514d97ab942f478ca5783a56d33f06d8",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "CreateClass",
+    "description": "Created class Test (1234)",
+    "createdAt": "2026-07-28T07:17:03.3570394Z"
+  },
+  {
+    "id": "31d42343e16f4913a609fc67090cc67c",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student SinglaNidhi (26-Xyz-001) in class Test. Email from admin@medcollege.edu to nidhis@yopmail.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to nidhis@yopmail.com.",
+    "createdAt": "2026-07-28T07:20:29.165874Z"
+  },
+  {
+    "id": "c06beda821ce4f26bdaf59b54034b329",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Deleted",
+    "description": "Deleted student Aarav Verma (26-Mbbs-027).",
+    "createdAt": "2026-08-03T12:14:03.7571245Z"
+  },
+  {
+    "id": "f1698d6eeabf4ed6a1a470ee069c92e8",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Abhishek Sharma (26-Mbbs-032) in class MBBS-Y1-A. Email from admin@medcollege.edu to abhishek@yopmail.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to abhishek@yopmail.com.",
+    "createdAt": "2026-08-03T12:18:03.9356077Z"
+  }
+]

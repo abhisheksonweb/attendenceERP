@@ -1,0 +1,6 @@
+@model ComingSoonViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+@await Html.PartialAsync("~/Views/Shared/ComingSoon.cshtml", Model)

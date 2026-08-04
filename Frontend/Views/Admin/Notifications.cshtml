@@ -1,0 +1,93 @@
+@model IReadOnlyList<NotificationViewModel>
+@{
+    ViewData["Title"] = "Notifications";
+    ViewData["Subtitle"] = "Filter by class to find alerts quickly";
+    var classes = ViewBag.Classes as IEnumerable<ClassFormViewModel> ?? Enumerable.Empty<ClassFormViewModel>();
+    var selectedClassId = ViewBag.SelectedClassId as string;
+}
+
+<div class="mc-card mb-3">
+    <form method="get" asp-action="Notifications" class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label">Class</label>
+            <select name="classId" class="form-select" onchange="this.form.submit()">
+                <option value="">All classes</option>
+                @foreach (var c in classes.OrderBy(x => x.Name))
+                {
+                    if (string.Equals(c.Id, selectedClassId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@c.Id" selected>@c.Name (@c.Code)</option>
+                    }
+                    else
+                    {
+                        <option value="@c.Id">@c.Name (@c.Code)</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <a asp-action="Notifications" class="btn btn-outline-secondary">Clear filter</a>
+        </div>
+    </form>
+</div>
+
+<div class="mc-card">
+    @if (Model.Any())
+    {
+        var groups = Model
+            .OrderByDescending(x => x.CreatedAt)
+            .GroupBy(n => string.IsNullOrWhiteSpace(n.ClassName) ? (string.IsNullOrWhiteSpace(n.ClassId) ? "General" : n.ClassId!) : n.ClassName!)
+            .OrderBy(g => g.Key == "General" ? 1 : 0)
+            .ThenBy(g => g.Key);
+
+        foreach (var group in groups)
+        {
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0"><i class="bi bi-building me-1"></i>@group.Key</h6>
+                    <span class="badge text-bg-light text-dark">@group.Count()</span>
+                </div>
+                <div class="list-group list-group-flush border rounded">
+                    @foreach (var n in group)
+                    {
+                        var icon = n.Type switch
+                        {
+                            "Success" => "bi-check-circle text-success",
+                            "Warning" => "bi-exclamation-triangle text-warning",
+                            "Error" => "bi-x-circle text-danger",
+                            "SecurityAlert" => "bi-shield-exclamation text-danger",
+                            _ => "bi-info-circle text-primary"
+                        };
+                        <div class="list-group-item py-3 @(n.IsRead ? "" : "bg-light")">
+                            <div class="d-flex gap-3">
+                                <i class="bi @icon fs-5"></i>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between flex-wrap gap-2">
+                                        <h6 class="mb-1">@n.Title</h6>
+                                        <small class="text-muted">@n.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</small>
+                                    </div>
+                                    <p class="mb-1 text-muted">@n.Message</p>
+                                    @if (!string.IsNullOrEmpty(n.LinkUrl))
+                                    {
+                                        <a href="@n.LinkUrl" class="small">View details <i class="bi bi-arrow-right"></i></a>
+                                    }
+                                </div>
+                                @if (!n.IsRead)
+                                {
+                                    <span class="badge text-bg-primary align-self-start">New</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-bell fs-1 d-block mb-2"></i>
+            @(string.IsNullOrWhiteSpace(selectedClassId) ? "No notifications yet." : "No notifications for this class.")
+        </div>
+    }
+</div>

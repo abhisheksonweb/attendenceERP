@@ -1,0 +1,279 @@
+@model PagedResult<StudentFormViewModel>
+@{
+    ViewData["Title"] = "Students";
+    ViewData["Subtitle"] = "Search, filter, and manage student records";
+    var filter = ViewBag.Filter as StudentListFilter ?? new StudentListFilter();
+    var departments = ViewBag.Departments as IEnumerable<string> ?? Enumerable.Empty<string>();
+    var sortBy = string.IsNullOrWhiteSpace(filter.SortBy) ? "name" : filter.SortBy!;
+    var sortDir = string.Equals(filter.SortDir, "desc", StringComparison.OrdinalIgnoreCase) ? "desc" : "asc";
+
+    string NextDir(string column) =>
+        string.Equals(sortBy, column, StringComparison.OrdinalIgnoreCase) && sortDir == "asc" ? "desc" : "asc";
+
+    string SortIcon(string column)
+    {
+        if (!string.Equals(sortBy, column, StringComparison.OrdinalIgnoreCase))
+            return "bi-arrow-down-up";
+        return sortDir == "desc" ? "bi-sort-down" : "bi-sort-up";
+    }
+}
+
+<div class="mc-card mb-3">
+    <form method="get" asp-action="Students" id="studentFilterForm" class="row g-2 align-items-end">
+        <input type="hidden" name="SortBy" value="@sortBy" />
+        <input type="hidden" name="SortDir" value="@sortDir" />
+        <input type="hidden" name="Page" value="1" />
+        <div class="col-md-3">
+            <label class="form-label small">Search</label>
+            <input type="text" name="Search" id="filterSearch" value="@filter.Search" class="form-control js-live-filter" placeholder="Name, ID, email…" autocomplete="off" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Department</label>
+            <select name="Department" class="form-select" onchange="this.form.submit()">
+                <option value="">All</option>
+                @foreach (var d in departments)
+                {
+                    if (string.Equals(filter.Department, d, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@d" selected>@d</option>
+                    }
+                    else
+                    {
+                        <option value="@d">@d</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Course</label>
+            <input type="text" name="Course" id="filterCourse" value="@filter.Course" class="form-control js-live-filter" autocomplete="off" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Semester</label>
+            <input type="text" name="Semester" id="filterSemester" value="@filter.Semester" class="form-control js-live-filter" autocomplete="off" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Status</label>
+            <select name="IsActive" class="form-select" onchange="this.form.submit()">
+                @if (filter.IsActive is null)
+                {
+                    <option value="" selected>All</option>
+                }
+                else
+                {
+                    <option value="">All</option>
+                }
+                @if (filter.IsActive == true)
+                {
+                    <option value="true" selected>Active</option>
+                }
+                else
+                {
+                    <option value="true">Active</option>
+                }
+                @if (filter.IsActive == false)
+                {
+                    <option value="false" selected>Inactive</option>
+                }
+                else
+                {
+                    <option value="false">Inactive</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-1 d-flex gap-1">
+            <button type="submit" class="btn btn-primary flex-grow-1" title="Search"><i class="bi bi-search"></i></button>
+            <a asp-action="Students" class="btn btn-outline-secondary" title="Clear filters"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <span class="text-muted">Showing @Model.Items.Count of @Model.TotalCount students</span>
+    <div class="d-flex gap-2">
+        <a asp-action="ImportStudents" class="btn btn-outline-primary btn-sm"><i class="bi bi-upload me-1"></i> Import</a>
+        <a asp-action="Index" class="btn btn-primary btn-sm"><i class="bi bi-person-plus me-1"></i> Add Student (pick class)</a>
+    </div>
+</div>
+
+<div class="mc-card students-table-card @(Model.TotalPages > 1 ? "has-fixed-pagination" : "")">
+    <div class="table-responsive students-table-scroll">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>
+                        <a class="text-decoration-none text-body" asp-action="Students"
+                           asp-route-Search="@filter.Search" asp-route-Department="@filter.Department"
+                           asp-route-Course="@filter.Course" asp-route-Semester="@filter.Semester"
+                           asp-route-IsActive="@filter.IsActive" asp-route-SortBy="name" asp-route-SortDir="@NextDir("name")" asp-route-Page="1">
+                            Student <i class="bi @SortIcon("name")"></i>
+                        </a>
+                    </th>
+                    <th>
+                        <a class="text-decoration-none text-body" asp-action="Students"
+                           asp-route-Search="@filter.Search" asp-route-Department="@filter.Department"
+                           asp-route-Course="@filter.Course" asp-route-Semester="@filter.Semester"
+                           asp-route-IsActive="@filter.IsActive" asp-route-SortBy="studentId" asp-route-SortDir="@NextDir("studentId")" asp-route-Page="1">
+                            ID / Enrollment <i class="bi @SortIcon("studentId")"></i>
+                        </a>
+                    </th>
+                    <th>
+                        <a class="text-decoration-none text-body" asp-action="Students"
+                           asp-route-Search="@filter.Search" asp-route-Department="@filter.Department"
+                           asp-route-Course="@filter.Course" asp-route-Semester="@filter.Semester"
+                           asp-route-IsActive="@filter.IsActive" asp-route-SortBy="department" asp-route-SortDir="@NextDir("department")" asp-route-Page="1">
+                            Department <i class="bi @SortIcon("department")"></i>
+                        </a>
+                    </th>
+                    <th>
+                        <a class="text-decoration-none text-body" asp-action="Students"
+                           asp-route-Search="@filter.Search" asp-route-Department="@filter.Department"
+                           asp-route-Course="@filter.Course" asp-route-Semester="@filter.Semester"
+                           asp-route-IsActive="@filter.IsActive" asp-route-SortBy="course" asp-route-SortDir="@NextDir("course")" asp-route-Page="1">
+                            Course <i class="bi @SortIcon("course")"></i>
+                        </a>
+                    </th>
+                    <th>
+                        <a class="text-decoration-none text-body" asp-action="Students"
+                           asp-route-Search="@filter.Search" asp-route-Department="@filter.Department"
+                           asp-route-Course="@filter.Course" asp-route-Semester="@filter.Semester"
+                           asp-route-IsActive="@filter.IsActive" asp-route-SortBy="semester" asp-route-SortDir="@NextDir("semester")" asp-route-Page="1">
+                            Semester <i class="bi @SortIcon("semester")"></i>
+                        </a>
+                    </th>
+                    <th>
+                        <a class="text-decoration-none text-body" asp-action="Students"
+                           asp-route-Search="@filter.Search" asp-route-Department="@filter.Department"
+                           asp-route-Course="@filter.Course" asp-route-Semester="@filter.Semester"
+                           asp-route-IsActive="@filter.IsActive" asp-route-SortBy="status" asp-route-SortDir="@NextDir("status")" asp-route-Page="1">
+                            Status <i class="bi @SortIcon("status")"></i>
+                        </a>
+                    </th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    foreach (var s in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (!string.IsNullOrEmpty(s.ProfilePhotoPath))
+                                    {
+                                        <img src="@s.ProfilePhotoPath" alt="" class="rounded-circle" width="36" height="36" style="object-fit:cover;" />
+                                    }
+                                    else
+                                    {
+                                        <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                                            <i class="bi bi-person"></i>
+                                        </span>
+                                    }
+                                    <div>
+                                        <strong>@s.Name</strong>
+                                        <div class="small text-muted">@s.Email</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>@s.StudentId</div>
+                                <small class="text-muted">@s.EnrollmentNumber</small>
+                            </td>
+                            <td>@s.Department</td>
+                            <td>@s.Course</td>
+                            <td>@s.Semester</td>
+                            <td>
+                                @if (s.IsActive)
+                                { <span class="badge text-bg-success">Active</span> }
+                                else
+                                { <span class="badge text-bg-secondary">Inactive</span> }
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="StudentDetails" asp-route-id="@s.Id" class="btn btn-outline-primary" title="Details"><i class="bi bi-eye"></i></a>
+                                    <a asp-action="EditStudent" asp-route-id="@s.Id" class="btn btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                                    <a asp-action="ResetStudentPassword" asp-route-id="@s.Id" class="btn btn-outline-warning" title="Reset Password"><i class="bi bi-key"></i></a>
+                                    <form asp-action="DeleteStudent" method="post" class="d-inline"
+                                          onsubmit="return confirm('Delete @s.Name (@s.StudentId)? This cannot be undone.');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@s.Id" />
+                                        <input type="hidden" name="classId" value="@s.ClassId" />
+                                        <button type="submit" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No students match your filters.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="mc-pagination-fixed" aria-label="Students pagination">
+        <ul class="pagination pagination-sm justify-content-center mb-0">
+            @{
+                var prev = Math.Max(1, Model.Page - 1);
+                var next = Math.Min(Model.TotalPages, Model.Page + 1);
+            }
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Students" asp-route-Page="@prev" asp-route-Search="@filter.Search" asp-route-Department="@filter.Department" asp-route-Course="@filter.Course" asp-route-Semester="@filter.Semester" asp-route-IsActive="@filter.IsActive" asp-route-SortBy="@sortBy" asp-route-SortDir="@sortDir">Previous</a>
+            </li>
+            @for (var p = 1; p <= Model.TotalPages; p++)
+            {
+                <li class="page-item @(p == Model.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Students" asp-route-Page="@p" asp-route-Search="@filter.Search" asp-route-Department="@filter.Department" asp-route-Course="@filter.Course" asp-route-Semester="@filter.Semester" asp-route-IsActive="@filter.IsActive" asp-route-SortBy="@sortBy" asp-route-SortDir="@sortDir">@p</a>
+                </li>
+            }
+            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" asp-action="Students" asp-route-Page="@next" asp-route-Search="@filter.Search" asp-route-Department="@filter.Department" asp-route-Course="@filter.Course" asp-route-Semester="@filter.Semester" asp-route-IsActive="@filter.IsActive" asp-route-SortBy="@sortBy" asp-route-SortDir="@sortDir">Next</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+@section Scripts {
+<script>
+(function () {
+    var form = document.getElementById('studentFilterForm');
+    if (!form) return;
+
+    var timer = null;
+    var focusKey = 'studentsFilterFocus';
+    var caretKey = 'studentsFilterCaret';
+
+    // Restore focus after auto-submit reload.
+    var focusId = sessionStorage.getItem(focusKey);
+    if (focusId) {
+        var el = document.getElementById(focusId);
+        if (el) {
+            el.focus();
+            var pos = parseInt(sessionStorage.getItem(caretKey) || String(el.value.length), 10);
+            if (!isNaN(pos) && el.setSelectionRange) {
+                try { el.setSelectionRange(pos, pos); } catch (_) {}
+            }
+        }
+        sessionStorage.removeItem(focusKey);
+        sessionStorage.removeItem(caretKey);
+    }
+
+    form.querySelectorAll('.js-live-filter').forEach(function (input) {
+        input.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                sessionStorage.setItem(focusKey, input.id);
+                sessionStorage.setItem(caretKey, String(input.selectionStart || input.value.length));
+                form.requestSubmit ? form.requestSubmit() : form.submit();
+            }, 400);
+        });
+    });
+})();
+</script>
+}

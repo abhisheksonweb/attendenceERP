@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Backend\MedicalCollege.Application\MedicalCollege.Application.csproj" />
+    <ProjectReference Include="..\Backend\MedicalCollege.Infrastructure\MedicalCollege.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+      <RootNamespace>MedicalCollege.Web</RootNamespace>
+    <AssemblyName>MedicalCollege.Web</AssemblyName>
+  </PropertyGroup>
+
+</Project>

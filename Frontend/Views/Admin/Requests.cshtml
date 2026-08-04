@@ -1,0 +1,137 @@
+@{
+    ViewData["Title"] = "Student Requests";
+    ViewData["Subtitle"] = "Review profile and attendance correction requests";
+    var pending = ViewBag.Pending as IEnumerable<ReviewRequestViewModel> ?? Enumerable.Empty<ReviewRequestViewModel>();
+    var history = ViewBag.History as IEnumerable<ReviewRequestViewModel> ?? Enumerable.Empty<ReviewRequestViewModel>();
+}
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pendingTab" type="button">
+            Pending <span class="badge bg-primary ms-1">@pending.Count()</span>
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#historyTab" type="button">History</button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="pendingTab">
+        @if (pending.Any())
+        {
+            foreach (var req in pending)
+            {
+                var isAttendance = req.FieldName.Equals("Attendance", StringComparison.OrdinalIgnoreCase);
+                <div class="mc-card mb-3">
+                    <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+                        <div>
+                            <strong>@req.StudentName</strong>
+                            @if (isAttendance)
+                            {
+                                <span class="badge text-bg-info ms-2">Attendance correction</span>
+                            }
+                            else
+                            {
+                                <span class="badge-soft ms-2">@req.FieldName</span>
+                            }
+                        </div>
+                    </div>
+                    @if (isAttendance)
+                    {
+                        <div class="mb-3 small">
+                            <div><span class="text-muted">Date:</span> <strong>@(DateTime.TryParse(req.OldValue, out var d) ? d.ToString("dddd, dd MMM yyyy") : req.OldValue)</strong></div>
+                            <div class="mt-1"><span class="text-muted">Reason:</span> @req.NewValue</div>
+                            <div class="mt-2 text-muted">Approve to mark <strong>Present</strong> with source <strong>Manual</strong>.</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row g-2 mb-3 small">
+                            <div class="col-md-6">
+                                <span class="text-muted">Current:</span> @req.OldValue
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted">Requested:</span> <strong>@req.NewValue</strong>
+                            </div>
+                        </div>
+                    }
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <form asp-action="ApproveRequest" method="post" class="d-flex gap-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@req.Id" />
+                                <input type="text" name="remarks" class="form-control form-control-sm" placeholder="Optional remarks" />
+                                <button type="submit" class="btn btn-success btn-sm text-nowrap"><i class="bi bi-check-lg"></i> Approve</button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <form asp-action="RejectRequest" method="post" class="d-flex gap-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@req.Id" />
+                                <input type="text" name="remarks" class="form-control form-control-sm" placeholder="Reason for rejection" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm text-nowrap"><i class="bi bi-x-lg"></i> Reject</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="mc-card text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                No pending requests.
+            </div>
+        }
+    </div>
+
+    <div class="tab-pane fade" id="historyTab">
+        <div class="mc-card">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Type</th>
+                            <th>Details</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (history.Any())
+                        {
+                            foreach (var req in history)
+                            {
+                                var isAttendance = req.FieldName.Equals("Attendance", StringComparison.OrdinalIgnoreCase);
+                                var statusCls = req.Status.Equals("Approved", StringComparison.OrdinalIgnoreCase) ? "text-bg-success" : "text-bg-danger";
+                                <tr>
+                                    <td>@req.StudentName</td>
+                                    <td>@(isAttendance ? "Attendance" : req.FieldName)</td>
+                                    <td>
+                                        @if (isAttendance)
+                                        {
+                                            <span>@(DateTime.TryParse(req.OldValue, out var hd) ? hd.ToString("dd MMM yyyy") : req.OldValue)</span>
+                                            <div class="small text-muted">@req.NewValue</div>
+                                        }
+                                        else
+                                        {
+                                            <text><span class="text-muted">@req.OldValue</span> &rarr; <strong>@req.NewValue</strong></text>
+                                        }
+                                    </td>
+                                    <td><span class="badge @statusCls">@req.Status</span></td>
+                                    <td class="text-muted">@(req.AdminRemarks ?? "—")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-4">No history yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

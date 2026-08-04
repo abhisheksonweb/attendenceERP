@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Manage System";
+    ViewData["Subtitle"] = "JSON storage and application configuration";
+}
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="mc-card h-100">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="icon"><i class="bi bi-database"></i></div>
+                <div>
+                    <h5 class="mb-0">JSON File Storage</h5>
+                    <p class="page-subtitle mb-0">Lightweight persistence for prototype deployment</p>
+                </div>
+            </div>
+            <p class="text-muted">User accounts, students, attendance records, notifications, and activity logs are stored in structured JSON files under the application data directory. This enables rapid development without a database server.</p>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item px-0"><i class="bi bi-file-earmark-code text-primary me-2"></i><code>users.json</code> — Admin &amp; student credentials</li>
+                <li class="list-group-item px-0"><i class="bi bi-file-earmark-code text-primary me-2"></i><code>students.json</code> — Student profiles</li>
+                <li class="list-group-item px-0"><i class="bi bi-file-earmark-code text-primary me-2"></i><code>attendance.json</code> — Daily attendance records</li>
+                <li class="list-group-item px-0"><i class="bi bi-file-earmark-code text-primary me-2"></i><code>notifications.json</code> — System notifications</li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="mc-card h-100">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                <div>
+                    <h5 class="mb-0">Future Migration Path</h5>
+                    <p class="page-subtitle mb-0">Ready for SQL Server / PostgreSQL</p>
+                </div>
+            </div>
+            <p class="text-muted">The repository pattern abstracts storage. When scaling to production, swap the JSON implementation for Entity Framework Core without changing controllers or views.</p>
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                Backup JSON data files before deployment. Seeded demo data is loaded on first run.
+            </div>
+        </div>
+    </div>
+</div>
