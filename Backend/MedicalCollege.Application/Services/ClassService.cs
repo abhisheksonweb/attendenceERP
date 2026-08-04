@@ -72,7 +72,7 @@ public class ClassService : IClassService
                     Department = a.Department,
                     Course = a.Course,
                     Date = a.Date,
-                    Status = a.Status.ToString(),
+                    Status = AttendanceFormatting.ToDisplayStatus(a.Status),
                     Source = a.Source,
                     Remarks = a.Remarks,
                     FirstIn = a.FirstIn,

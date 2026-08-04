@@ -49,7 +49,7 @@ public class AttendanceController : Controller
                 : statusFilter.Equals("Absent", StringComparison.OrdinalIgnoreCase)
                     ? records.Where(r =>
                             r.Status.Equals("Absent", StringComparison.OrdinalIgnoreCase) ||
-                            r.Status.Equals("PartialAbsent", StringComparison.OrdinalIgnoreCase))
+                            AttendanceDisplay.IsPartiallyPresent(r.Status))
                         .ToList()
                     : records.Where(r => r.Status.Equals(statusFilter, StringComparison.OrdinalIgnoreCase))
                         .ToList();

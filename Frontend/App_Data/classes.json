@@ -13,6 +13,38 @@
     "frmClassId": 4,
     "isActive": true,
     "createdAt": "2026-08-04T10:27:16.9460696Z",
-    "updatedAt": "2026-08-04T10:28:16.318021Z"
+    "updatedAt": "2026-08-04T12:01:18.6267856Z"
+  },
+  {
+    "id": "2d1d0b0bdf4c4835867405eb203e79f0",
+    "name": "test",
+    "code": "2001",
+    "department": "Medicine",
+    "course": "MBBS",
+    "semester": "2",
+    "description": null,
+    "maxClassDurationMinutes": 60,
+    "minAttendanceMinutes": 50,
+    "adminUserId": "fa57031faf244b9a871781686d1fce2d",
+    "frmClassId": 5,
+    "isActive": true,
+    "createdAt": "2026-08-04T10:40:43.2846637Z",
+    "updatedAt": "2026-08-04T10:40:43.4071683Z"
+  },
+  {
+    "id": "7366190c745d4ea4b91045a01a2c0663",
+    "name": "MBBS-Y1-A",
+    "code": "MBBS-Y1-A",
+    "department": "Medicine",
+    "course": "MBBS",
+    "semester": "Y1-A",
+    "description": "Auto-created from student CSV import",
+    "maxClassDurationMinutes": null,
+    "minAttendanceMinutes": null,
+    "adminUserId": "fa57031faf244b9a871781686d1fce2d",
+    "frmClassId": 6,
+    "isActive": true,
+    "createdAt": "2026-08-04T11:12:47.0030804Z",
+    "updatedAt": "2026-08-04T11:15:44.3342547Z"
   }
 ]

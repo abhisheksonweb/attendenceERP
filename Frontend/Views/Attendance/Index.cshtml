@@ -7,8 +7,6 @@
     var stats = ViewBag.Stats as AttendanceStats;
     var statusFilter = ViewBag.StatusFilter as string ?? "";
     var visitLogs = ViewBag.VisitLogs as List<DailyVisitLogRow> ?? new List<DailyVisitLogRow>();
-    var visitCounts = ViewBag.VisitCounts as Dictionary<string, int>
-                      ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 }
 
 <div class="row g-3 mb-3">
@@ -164,7 +162,6 @@
                     <th>Department</th>
                     <th>Course</th>
                     <th>Status</th>
-                    <th>Visits</th>
                     <th>First In</th>
                     <th>Last Out</th>
                     <th>Source</th>
@@ -176,27 +173,14 @@
                 {
                     foreach (var r in Model.OrderBy(x => x.StudentName))
                     {
-                        var isPresent = AttendanceDisplay.IsFullyPresent(r.Status);
-                        var isPartial = AttendanceDisplay.IsPartiallyPresent(r.Status);
                         var cls = AttendanceDisplay.BadgeClass(r.Status);
                         var statusLabel = AttendanceDisplay.StatusLabel(r.Status);
-                        visitCounts.TryGetValue(r.StudentCode ?? "", out var visits);
                         <tr>
                             <td>@r.StudentCode</td>
                             <td><strong>@r.StudentName</strong></td>
                             <td>@r.Department</td>
                             <td>@r.Course</td>
                             <td><span class="badge @cls">@statusLabel</span></td>
-                            <td>
-                                @if (visits > 0)
-                                {
-                                    <span class="badge text-bg-primary">@visits</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">—</span>
-                                }
-                            </td>
                             <td class="text-success">@(r.FirstIn ?? "—")</td>
                             <td class="text-danger">@(r.LastOut ?? "—")</td>
                             <td>@r.Source</td>
@@ -206,7 +190,7 @@
                 }
                 else
                 {
-                    <tr><td colspan="10" class="text-center text-muted py-4">
+                    <tr><td colspan="9" class="text-center text-muted py-4">
                         @(string.IsNullOrWhiteSpace(statusFilter)
                             ? $"No attendance marked on {date:dd MMM yyyy}. Present/Absent stay 0 until face recognition or manual mark for that day."
                             : $"No {statusFilter.ToLowerInvariant()} records on {date:dd MMM yyyy}.")

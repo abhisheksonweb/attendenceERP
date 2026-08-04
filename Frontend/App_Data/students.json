@@ -1,9 +1,9 @@
 [
   {
-    "id": "38bcb04252d041638f6a3918da2ab868",
-    "userId": "23472e558c024c63aedf7eb003680c35",
+    "id": "a2931563899e47068c938b5e565746ee",
+    "userId": "1b4557bd497043a2bfe598a1c5cf45f7",
     "classId": "a89f9ef2679c4e7c8cdfcc3706878d72",
-    "frmStudentId": 19,
+    "frmStudentId": 21,
     "studentId": "26-Btech-001",
     "enrollmentNumber": "26-Btech-001",
     "name": "Chhaya",
@@ -22,12 +22,12 @@
     "pincode": null,
     "guardianName": null,
     "guardianPhone": null,
-    "guardianEmail": "chhayak.revoceptsolutions@gmail.com",
+    "guardianEmail": null,
     "parentEmailUnsubscribed": false,
     "isActive": true,
     "faceRegistered": true,
-    "createdAt": "2026-08-04T10:28:12.2423603Z",
-    "updatedAt": "2026-08-04T10:29:22.5167857Z",
+    "createdAt": "2026-08-04T12:01:13.8545082Z",
+    "updatedAt": "2026-08-04T12:02:33.6272799Z",
     "createdBy": "fa57031faf244b9a871781686d1fce2d"
   }
 ]

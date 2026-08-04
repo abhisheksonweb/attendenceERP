@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "ec7388b57f014b568100a58df6085396",
+    "studentId": "a2931563899e47068c938b5e565746ee",
+    "studentName": "Chhaya",
+    "classId": "a89f9ef2679c4e7c8cdfcc3706878d72",
+    "className": "Physics",
+    "guardianName": null,
+    "guardianPhone": null,
+    "guardianEmail": null,
+    "channel": "Log",
+    "alertType": "Absence",
+    "message": "Chhaya (26-Btech-001) was marked Absent for Physics on 04 Aug 2026.",
+    "delivered": false,
+    "deliveryNote": "Logged on-premises. No guardian phone/email on student record.",
+    "createdAt": "2026-08-04T12:30:22.3469906Z"
+  }
+]

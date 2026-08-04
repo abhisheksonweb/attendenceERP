@@ -547,7 +547,8 @@ def dashboard_rows(class_id: Optional[int] = None, day: Optional[str] = None) ->
                 "external_id": agg.get("external_id") or "",
                 "sessions": agg["sessions"],
                 "first_in": _fmt_time(agg["first_in_ts"]),
-                "last_out": _fmt_time(agg["last_out_ts"]),
+                # While still IN, don't show a previous exit as "last out" — it misleads duration/status.
+                "last_out": "-" if agg["open"] else _fmt_time(agg["last_out_ts"]),
                 "time_in_class": format_duration(agg["seconds"]),
                 "time_in_class_seconds": int(agg["seconds"]),
                 "avg_per_day": avg.get("avg_per_day", "-"),

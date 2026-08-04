@@ -14,5 +14,69 @@
     "action": "Student Created",
     "description": "Created student Chhaya (26-Btech-001) in class Physics. Email from admin@medcollege.edu to chhaya@yopmail.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to chhaya@yopmail.com.",
     "createdAt": "2026-08-04T10:28:16.2299934Z"
+  },
+  {
+    "id": "af72356ff7344beaa47e4d127dc503ee",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "CreateClass",
+    "description": "Created class test (2001)",
+    "createdAt": "2026-08-04T10:40:43.3048581Z"
+  },
+  {
+    "id": "530771e90dd14768a8dd659f125edea6",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Updated",
+    "description": "Updated student record for Chhaya (26-Btech-001).",
+    "createdAt": "2026-08-04T10:42:23.8154109Z"
+  },
+  {
+    "id": "4341688a606e4ceea0f916eff5f9d4aa",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "CreateClass",
+    "description": "Auto-created class MBBS-Y1-A (MBBS-Y1-A) during CSV import",
+    "createdAt": "2026-08-04T11:12:47.0130626Z"
+  },
+  {
+    "id": "0a253f4cfd1841969ab98e6df915dadf",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Riya Sharma (26-Mbbs-001) in class MBBS-Y1-A. Email from admin@medcollege.edu to riya.sharma@example.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to riya.sharma@example.com.",
+    "createdAt": "2026-08-04T11:12:51.5807671Z"
+  },
+  {
+    "id": "4d30d800c254400bb105e136da3fea64",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student CSV Import",
+    "description": "Imported 1/2 students from CSV.",
+    "createdAt": "2026-08-04T11:12:51.6154119Z"
+  },
+  {
+    "id": "985ff25a70f547d3a33b505e16a0ab8e",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Deleted",
+    "description": "Deleted student Riya Sharma (26-Mbbs-001).",
+    "createdAt": "2026-08-04T11:15:44.2262906Z"
+  },
+  {
+    "id": "4eb356498aa64ce691c2522ce9c4f9a2",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Deleted",
+    "description": "Deleted student Chhaya (26-Btech-001).",
+    "createdAt": "2026-08-04T12:00:53.6099105Z"
+  },
+  {
+    "id": "3b730939eadf430d81ae05b5ebd5f9b4",
+    "actorUserId": "fa57031faf244b9a871781686d1fce2d",
+    "actorName": "College Admin",
+    "action": "Student Created",
+    "description": "Created student Chhaya (26-Btech-001) in class Physics. Email from admin@medcollege.edu to chhaya@yopmail.com: sent \u2014 Mail sent from chhayak.revoceptsolutions@gmail.com to chhaya@yopmail.com.",
+    "createdAt": "2026-08-04T12:01:18.5306586Z"
   }
 ]

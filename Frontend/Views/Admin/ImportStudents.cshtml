@@ -4,70 +4,36 @@
     var classes = ViewBag.Classes as IEnumerable<ClassFormViewModel> ?? Enumerable.Empty<ClassFormViewModel>();
     var selectedClassId = ViewBag.SelectedClassId as string;
     var importResult = ViewBag.ImportResult as StudentImportResultViewModel;
+    var importBanner = ViewBag.ImportBanner as string;
+    var bannerSuccess = ViewBag.ImportBannerIsSuccess as bool? == true;
 }
 
 <div class="row justify-content-center">
     <div class="col-lg-9">
-        <div class="mc-card">
-            <form asp-action="ImportStudents" method="post" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
-
-                <div class="mb-3">
-                    <label class="form-label">Default class (when CSV has no ClassCode)</label>
-                    <select name="defaultClassId" class="form-select">
-                        <option value="">-- Optional: pick default class --</option>
-                        @foreach (var c in classes.Where(x => x.IsActive))
-                        {
-                            if (c.Id == selectedClassId)
-                            {
-                                <option value="@c.Id" selected>@c.Name (@c.Code) · @c.Course</option>
-                            }
-                            else
-                            {
-                                <option value="@c.Id">@c.Name (@c.Code) · @c.Course</option>
-                            }
-                        }
-                    </select>
-                    <div class="form-text">
-                        If a row has <strong>ClassCode</strong>, that class is used.
-                        Missing ClassCodes are <strong>created automatically</strong> from the CSV.
-                        If ClassCode is blank, the student is added to this default class.
-                    </div>
-                </div>
-
-                <div class="border border-2 border-dashed rounded-4 p-4 text-center mb-3" style="border-color:var(--mc-gray-2)!important;background:var(--mc-gray);">
-                    <div class="icon mx-auto mb-3" style="width:64px;height:64px;font-size:1.8rem;"><i class="bi bi-cloud-upload"></i></div>
-                    <h5 class="mb-2">Upload CSV file</h5>
-                    <p class="text-muted mb-3 small">
-                        Required: <code>Name</code>, <code>Email</code>, <code>Mobile</code>.
-                        Optional: <code>ClassCode</code>, <code>PhotoUrl</code> (direct link to student photo — face is enrolled automatically),
-                        StudentId, EnrollmentNumber, DateOfBirth, Gender, Guardian fields.
-                        Save your Excel sheet as <strong>CSV</strong> before upload.
-                    </p>
-                    <input type="file" name="file" class="form-control mb-3" accept=".csv" required />
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-upload me-1"></i> Upload &amp; Import
-                    </button>
-                </div>
-            </form>
-
-            <div class="d-flex flex-wrap gap-2">
-                <a asp-action="Students" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Back to Students</a>
-                <a asp-action="ImportStudentsTemplate" class="btn btn-link">
-                    <i class="bi bi-download me-1"></i> Download sample template
-                </a>
+        @if (!string.IsNullOrWhiteSpace(importBanner) && bannerSuccess)
+        {
+            <div class="alert alert-success mb-3" role="alert">
+                <i class="bi bi-check-circle me-1"></i>
+                @importBanner
             </div>
-        </div>
+        }
 
         @if (importResult is not null)
         {
-            <div class="mc-card mt-4">
+            <div class="mc-card mb-4" id="importResultPanel">
                 <h5 class="mb-3">Import result</h5>
                 <p class="mb-3">
-                    <span class="badge text-bg-success">@importResult.SuccessCount added</span>
-                    <span class="badge text-bg-danger">@importResult.FailedCount failed</span>
-                    <span class="text-muted ms-2">@importResult.TotalRows rows processed</span>
+                    @if (importResult.AbortedDueToErrors)
+                    {
+                        <span class="badge text-bg-danger">@importResult.FailedCount error(s)</span>
+                        <span class="badge text-bg-secondary">0 added</span>
+                    }
+                    else
+                    {
+                        <span class="badge text-bg-success">@importResult.SuccessCount added</span>
+                        <span class="badge text-bg-danger">@importResult.FailedCount failed</span>
+                    }
+                    <span class="text-muted ms-2">@importResult.TotalRows rows checked</span>
                 </p>
                 <div class="table-responsive">
                     <table class="table table-sm table-hover align-middle mb-0">
@@ -100,7 +66,7 @@
                                     }
                                     else
                                     {
-                                        <span class="text-danger">Failed</span>
+                                        <span class="text-danger">@(importResult.AbortedDueToErrors ? "Error" : "Failed")</span>
                                     }
                                 </td>
                                 <td class="small">@row.Message</td>
@@ -111,5 +77,57 @@
                 </div>
             </div>
         }
+
+        <div class="mc-card">
+            <form asp-action="ImportStudents" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+                <div class="mb-3">
+                    <label class="form-label">Default class (when CSV has no ClassCode)</label>
+                    <select name="defaultClassId" class="form-select">
+                        <option value="">-- Optional: pick default class --</option>
+                        @foreach (var c in classes.Where(x => x.IsActive))
+                        {
+                            if (c.Id == selectedClassId)
+                            {
+                                <option value="@c.Id" selected>@c.Name (@c.Code) · @c.Course</option>
+                            }
+                            else
+                            {
+                                <option value="@c.Id">@c.Name (@c.Code) · @c.Course</option>
+                            }
+                        }
+                    </select>
+                    <div class="form-text">
+                        If a row has <strong>ClassCode</strong>, that class is used (created if missing).
+                        If ClassCode is blank, pick a default class above.
+                        Import is <strong>all-or-nothing</strong>: if any row has an error, nothing is added — fix the CSV and upload again.
+                    </div>
+                </div>
+
+                <div class="border border-2 border-dashed rounded-4 p-4 text-center mb-3" style="border-color:var(--mc-gray-2)!important;background:var(--mc-gray);">
+                    <div class="icon mx-auto mb-3" style="width:64px;height:64px;font-size:1.8rem;"><i class="bi bi-cloud-upload"></i></div>
+                    <h5 class="mb-2">Upload CSV file</h5>
+                    <p class="text-muted mb-3 small">
+                        Required: <code>Name</code>, <code>Email</code>, <code>Mobile</code>.
+                        Optional: <code>ClassCode</code>, <code>PhotoUrl</code> (direct link to student photo — face is enrolled automatically),
+                        StudentId, EnrollmentNumber, DateOfBirth, Gender, Guardian fields.
+                        Save your Excel sheet as <strong>CSV</strong> before upload.
+                    </p>
+                    <input type="file" name="file" class="form-control mb-3" accept=".csv" required />
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload me-1"></i> Upload &amp; Import
+                    </button>
+                </div>
+            </form>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-action="Students" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Back to Students</a>
+                <a asp-action="ImportStudentsTemplate" class="btn btn-link">
+                    <i class="bi bi-download me-1"></i> Download sample template
+                </a>
+            </div>
+        </div>
     </div>
 </div>

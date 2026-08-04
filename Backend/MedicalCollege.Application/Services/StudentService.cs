@@ -307,9 +307,12 @@ public class StudentService : IStudentService
                 return ServiceResult<StudentImportResultViewModel>.Fail("Default class not found or inactive.");
         }
 
-        var classCache = new Dictionary<string, ClassRoom?>(StringComparer.OrdinalIgnoreCase);
-        var rows = new List<StudentImportRowResult>();
-        var affected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // ---- Phase 1: parse + validate every row (no creates) ----
+        var pending = new List<PendingImportRow>();
+        var seenEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var seenStudentIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var seenEnrollments = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var existingClasses = new Dictionary<string, ClassRoom>(StringComparer.OrdinalIgnoreCase);
         var rowNumber = 1;
         string? line;
 
@@ -335,6 +338,9 @@ public class StudentService : IStudentService
             var guardianPhone = Cell("guardianphone");
             var guardianEmail = Cell("guardianemail");
             var photoUrl = Cell("photourl");
+            var courseCol = Cell("course");
+            var deptCol = Cell("department");
+            var semCol = Cell("semester");
 
             var rowResult = new StudentImportRowResult
             {
@@ -345,57 +351,33 @@ public class StudentService : IStudentService
                 PhotoUrl = string.IsNullOrWhiteSpace(photoUrl) ? null : photoUrl
             };
 
-            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
-            {
-                rowResult.Success = false;
-                rowResult.Message = "Name and Email are required.";
-                rows.Add(rowResult);
-                continue;
-            }
+            var errors = new List<string>();
 
+            if (string.IsNullOrWhiteSpace(name))
+                errors.Add("Name is required.");
+            if (string.IsNullOrWhiteSpace(email))
+                errors.Add("Email is required.");
+            else if (!email.Contains('@'))
+                errors.Add("Email looks invalid.");
             if (string.IsNullOrWhiteSpace(mobile))
-            {
-                rowResult.Success = false;
-                rowResult.Message = "Mobile is required.";
-                rows.Add(rowResult);
-                continue;
-            }
+                errors.Add("Mobile is required.");
 
-            ClassRoom? classRoom;
-            var classWasCreated = false;
+            ClassRoom? classRoom = null;
+            string? classCodeToCreate = null;
             if (!string.IsNullOrWhiteSpace(classCode))
             {
                 var codeKey = classCode.Trim();
-                if (!classCache.TryGetValue(codeKey, out classRoom))
+                if (!existingClasses.TryGetValue(codeKey, out classRoom))
                 {
                     classRoom = await _classRepository.GetByCodeAsync(codeKey);
-                    if (classRoom is null)
-                    {
-                        var courseCol = Cell("course");
-                        var deptCol = Cell("department");
-                        var semCol = Cell("semester");
-                        classRoom = await CreateClassFromImportAsync(
-                            codeKey, courseCol, deptCol, semCol, actorUserId, actorName, cancellationToken);
-                        classWasCreated = true;
-                    }
-                    else if (!classRoom.IsActive)
-                    {
-                        classRoom.IsActive = true;
-                        classRoom.UpdatedAt = DateTime.UtcNow;
-                        await _classRepository.UpdateAsync(classRoom);
-                        classWasCreated = true; // reactivated for import messaging
-                    }
-
-                    classCache[codeKey] = classRoom;
+                    if (classRoom is not null)
+                        existingClasses[codeKey] = classRoom;
                 }
 
                 if (classRoom is null)
-                {
-                    rowResult.Success = false;
-                    rowResult.Message = $"Could not create class '{codeKey}'.";
-                    rows.Add(rowResult);
-                    continue;
-                }
+                    classCodeToCreate = codeKey;
+                else
+                    rowResult.ClassCode = classRoom.Code;
             }
             else if (defaultClass is not null)
             {
@@ -404,79 +386,192 @@ public class StudentService : IStudentService
             }
             else
             {
-                rowResult.Success = false;
-                rowResult.Message = "No ClassCode in row and no default class selected.";
-                rows.Add(rowResult);
-                continue;
+                errors.Add("No ClassCode in row and no default class selected.");
             }
 
             var dob = DateTime.Today.AddYears(-18);
             if (!string.IsNullOrWhiteSpace(dobRaw) && !DateTime.TryParse(dobRaw, out dob))
-            {
-                rowResult.Success = false;
-                rowResult.Message = $"Invalid DateOfBirth '{dobRaw}'.";
-                rows.Add(rowResult);
-                continue;
-            }
+                errors.Add($"Invalid DateOfBirth '{dobRaw}'.");
 
             var gender = Gender.Male;
             if (!string.IsNullOrWhiteSpace(genderRaw) && !Enum.TryParse(genderRaw, ignoreCase: true, out gender))
+                errors.Add($"Invalid Gender '{genderRaw}' (use Male, Female, or Other).");
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                if (!seenEmails.Add(email.Trim()))
+                    errors.Add("Duplicate Email in this CSV.");
+                else
+                {
+                    var existingEmail = await _userRepository.GetByEmailAsync(email.Trim());
+                    if (existingEmail is not null)
+                        errors.Add("Email is already in use.");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(studentId))
+            {
+                if (!seenStudentIds.Add(studentId.Trim()))
+                    errors.Add("Duplicate StudentId in this CSV.");
+                else
+                {
+                    var existing = await _studentRepository.GetByStudentIdAsync(studentId.Trim());
+                    if (existing is not null)
+                        errors.Add("Student ID is already in use.");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(enrollment))
+            {
+                if (!seenEnrollments.Add(enrollment.Trim()))
+                    errors.Add("Duplicate EnrollmentNumber in this CSV.");
+                else
+                {
+                    var existing = await _studentRepository.GetByEnrollmentAsync(enrollment.Trim());
+                    if (existing is not null)
+                        errors.Add("Enrollment number is already in use.");
+                }
+            }
+
+            if (errors.Count > 0)
             {
                 rowResult.Success = false;
-                rowResult.Message = $"Invalid Gender '{genderRaw}' (use Male, Female, or Other).";
-                rows.Add(rowResult);
+                rowResult.Message = string.Join(" ", errors);
+                pending.Add(new PendingImportRow { Result = rowResult });
                 continue;
             }
 
-            var model = new StudentFormViewModel
-            {
-                ClassId = classRoom.Id,
-                Name = name,
-                Email = email,
-                Mobile = mobile,
-                StudentId = studentId,
-                EnrollmentNumber = enrollment,
-                DateOfBirth = dob.Date,
-                Gender = gender,
-                GuardianName = string.IsNullOrWhiteSpace(guardianName) ? null : guardianName,
-                GuardianPhone = string.IsNullOrWhiteSpace(guardianPhone) ? null : guardianPhone,
-                GuardianEmail = string.IsNullOrWhiteSpace(guardianEmail) ? null : guardianEmail,
-                ProfilePhotoPath = string.IsNullOrWhiteSpace(photoUrl) ? null : photoUrl.Trim(),
-                TemporaryPassword = "Temp@123",
-                ForcePasswordChange = true,
-                IsActive = true
-            };
+            rowResult.Success = true;
+            rowResult.Message = classCodeToCreate is not null
+                ? $"Ready — will create class {classCodeToCreate} and add student."
+                : $"Ready — will add to {(classRoom?.Name ?? rowResult.ClassCode)}.";
 
-            var create = await CreateStudentAsync(model, actorUserId, actorName, cancellationToken);
-            rowResult.Success = create.Success;
+            pending.Add(new PendingImportRow
+            {
+                Result = rowResult,
+                ClassRoom = classRoom,
+                ClassCodeToCreate = classCodeToCreate,
+                CourseFromCsv = courseCol,
+                DepartmentFromCsv = deptCol,
+                SemesterFromCsv = semCol,
+                Model = new StudentFormViewModel
+                {
+                    ClassId = classRoom?.Id,
+                    Name = name,
+                    Email = email,
+                    Mobile = mobile,
+                    StudentId = studentId,
+                    EnrollmentNumber = enrollment,
+                    DateOfBirth = dob.Date,
+                    Gender = gender,
+                    GuardianName = string.IsNullOrWhiteSpace(guardianName) ? null : guardianName,
+                    GuardianPhone = string.IsNullOrWhiteSpace(guardianPhone) ? null : guardianPhone,
+                    GuardianEmail = string.IsNullOrWhiteSpace(guardianEmail) ? null : guardianEmail,
+                    ProfilePhotoPath = string.IsNullOrWhiteSpace(photoUrl) ? null : photoUrl.Trim(),
+                    TemporaryPassword = "Temp@123",
+                    ForcePasswordChange = true,
+                    IsActive = true
+                }
+            });
+        }
+
+        if (pending.Count == 0)
+            return ServiceResult<StudentImportResultViewModel>.Fail("CSV has no data rows.");
+
+        var rowResults = pending.Select(p => p.Result).ToList();
+        var failed = rowResults.Count(r => !r.Success);
+        if (failed > 0)
+        {
+            // Mark ready rows so the UI shows they were blocked by other errors.
+            foreach (var p in pending.Where(x => x.Result.Success))
+            {
+                p.Result.Success = false;
+                p.Result.Message = "Not imported — fix all CSV errors and upload again.";
+            }
+
+            var blocked = new StudentImportResultViewModel
+            {
+                TotalRows = rowResults.Count,
+                SuccessCount = 0,
+                FailedCount = rowResults.Count,
+                AbortedDueToErrors = true,
+                Rows = rowResults
+            };
+            return ServiceResult<StudentImportResultViewModel>.Ok(blocked,
+                $"Import blocked: {failed} row(s) have errors. No students were added. Fix the CSV and upload again.");
+        }
+
+        // ---- Phase 2: all valid — create classes + students ----
+        var createdClassCache = new Dictionary<string, ClassRoom>(StringComparer.OrdinalIgnoreCase);
+        var affected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var p in pending)
+        {
+            var classRoom = p.ClassRoom;
+            var classWasCreated = false;
+            if (classRoom is null && !string.IsNullOrWhiteSpace(p.ClassCodeToCreate))
+            {
+                var codeKey = p.ClassCodeToCreate!;
+                if (!createdClassCache.TryGetValue(codeKey, out classRoom))
+                {
+                    var existing = await _classRepository.GetByCodeAsync(codeKey);
+                    if (existing is not null)
+                    {
+                        if (!existing.IsActive)
+                        {
+                            existing.IsActive = true;
+                            existing.UpdatedAt = DateTime.UtcNow;
+                            await _classRepository.UpdateAsync(existing);
+                        }
+                        classRoom = existing;
+                    }
+                    else
+                    {
+                        classRoom = await CreateClassFromImportAsync(
+                            codeKey, p.CourseFromCsv, p.DepartmentFromCsv, p.SemesterFromCsv,
+                            actorUserId, actorName, cancellationToken);
+                        classWasCreated = true;
+                    }
+                    createdClassCache[codeKey] = classRoom;
+                }
+            }
+
+            if (classRoom is null)
+            {
+                p.Result.Success = false;
+                p.Result.Message = "Could not resolve class.";
+                continue;
+            }
+
+            p.Model!.ClassId = classRoom.Id;
+            p.Result.ClassCode = classRoom.Code;
+            var create = await CreateStudentAsync(p.Model, actorUserId, actorName, cancellationToken);
+            p.Result.Success = create.Success;
             if (create.Success)
             {
-                rowResult.PortalStudentId = create.Data?.Id;
-                rowResult.ClassId = classRoom.Id;
-                rowResult.Message = classWasCreated
+                p.Result.PortalStudentId = create.Data?.Id;
+                p.Result.ClassId = classRoom.Id;
+                p.Result.Message = classWasCreated
                     ? $"Class {classRoom.Code} created; student added."
                     : $"Added to {classRoom.Name} ({classRoom.Code}).";
-                if (!string.IsNullOrWhiteSpace(photoUrl))
-                    rowResult.Message += " Photo link saved.";
+                if (!string.IsNullOrWhiteSpace(p.Result.PhotoUrl))
+                    p.Result.Message += " Photo link saved.";
                 affected.Add(classRoom.Id);
             }
             else
             {
-                rowResult.Message = create.Message ?? "Failed.";
+                p.Result.Message = create.Message ?? "Failed.";
             }
-            rows.Add(rowResult);
         }
-
-        if (rows.Count == 0)
-            return ServiceResult<StudentImportResultViewModel>.Fail("CSV has no data rows.");
 
         var result = new StudentImportResultViewModel
         {
-            TotalRows = rows.Count,
-            SuccessCount = rows.Count(r => r.Success),
-            FailedCount = rows.Count(r => !r.Success),
+            TotalRows = rowResults.Count,
+            SuccessCount = rowResults.Count(r => r.Success),
+            FailedCount = rowResults.Count(r => !r.Success),
+            AbortedDueToErrors = false,
             AffectedClassIds = affected.ToList(),
-            Rows = rows
+            Rows = rowResults
         };
 
         await _activityService.LogAsync(
@@ -487,6 +582,17 @@ public class StudentService : IStudentService
 
         return ServiceResult<StudentImportResultViewModel>.Ok(result,
             $"Import finished: {result.SuccessCount} added, {result.FailedCount} failed.");
+    }
+
+    private sealed class PendingImportRow
+    {
+        public StudentImportRowResult Result { get; set; } = new();
+        public StudentFormViewModel? Model { get; set; }
+        public ClassRoom? ClassRoom { get; set; }
+        public string? ClassCodeToCreate { get; set; }
+        public string CourseFromCsv { get; set; } = string.Empty;
+        public string DepartmentFromCsv { get; set; } = string.Empty;
+        public string SemesterFromCsv { get; set; } = string.Empty;
     }
 
     public async Task<ServiceResult<StudentFormViewModel>> UpdateStudentAsync(

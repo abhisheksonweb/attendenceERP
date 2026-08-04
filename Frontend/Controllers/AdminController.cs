@@ -165,8 +165,8 @@ public class AdminController : Controller
         {
             syncedAt = DateTime.Now.ToString("HH:mm:ss"),
             present = today.Count(r => r.Status is "Present" or "Late"),
-            earlyLeave = today.Count(r => r.EarlyLeave || r.Status == "PartialAbsent"),
-            partialAbsent = today.Count(r => r.Status == "PartialAbsent" || r.EarlyLeave),
+            earlyLeave = today.Count(r => r.EarlyLeave || AttendanceDisplay.IsPartiallyPresent(r.Status)),
+            partialAbsent = today.Count(r => AttendanceDisplay.IsPartiallyPresent(r.Status) || r.EarlyLeave),
             total = detail.Students.Count(s => s.IsActive),
             occupancyInNow,
             rows = today.Select(r => new
@@ -526,6 +526,12 @@ public class AdminController : Controller
             return View();
         }
 
+        if (result.Data.AbortedDueToErrors)
+        {
+            ViewBag.ImportResult = result.Data;
+            return View();
+        }
+
         foreach (var classId in result.Data.AffectedClassIds)
             await SyncClassInternalAsync(classId);
 
@@ -554,7 +560,8 @@ public class AdminController : Controller
         var msg = result.Message ?? "Import finished.";
         if (faceOk + faceFail > 0)
             msg += $" Face enroll: {faceOk} ok, {faceFail} failed.";
-        TempData["Success"] = msg;
+        ViewBag.ImportBanner = msg;
+        ViewBag.ImportBannerIsSuccess = true;
         ViewBag.ImportResult = result.Data;
         return View();
     }
@@ -565,7 +572,7 @@ public class AdminController : Controller
         const string csv =
             "ClassCode,Name,Email,Mobile,StudentId,EnrollmentNumber,DateOfBirth,Gender,GuardianName,GuardianPhone,GuardianEmail,PhotoUrl\r\n" +
             "MBBS-Y1-A,Riya Sharma,riya.sharma@example.com,9876543210,,,2005-04-12,Female,Parent Sharma,9876500001,parent.riya@example.com,https://example.com/photos/riya.jpg\r\n" +
-            ",Amit Patel,amit.patel@example.com,9876543211,,,2004-11-03,Male,,,,\r\n";
+            "MBBS-Y1-A,Amit Patel,amit.patel@example.com,9876543211,,,2004-11-03,Male,,,,\r\n";
         var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
         return File(bytes, "text/csv", "student-import-template.csv");
     }

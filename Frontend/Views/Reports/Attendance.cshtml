@@ -8,12 +8,12 @@
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div></div>
     <div class="btn-group">
-        <button type="button" class="btn btn-outline-primary btn-sm" disabled title="Coming soon">
+        <a asp-action="ExportAttendance" asp-route-format="pdf" class="btn btn-outline-primary btn-sm">
             <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
-        </button>
-        <button type="button" class="btn btn-outline-primary btn-sm" onclick="alert('Excel export will be available in a future release.');">
+        </a>
+        <a asp-action="ExportAttendance" asp-route-format="excel" class="btn btn-outline-primary btn-sm">
             <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
-        </button>
+        </a>
     </div>
 </div>
 
@@ -38,11 +38,11 @@
                 {
                     foreach (var r in records)
                     {
-                        var cls = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ? "text-bg-success" : "text-bg-danger";
+                        var cls = AttendanceDisplay.BadgeClass(r.Status);
                         <tr>
                             <td><strong>@r.StudentName</strong><br /><small>@r.StudentCode</small></td>
                             <td>@r.Department</td>
-                            <td><span class="badge @cls">@r.Status</span></td>
+                            <td><span class="badge @cls">@AttendanceDisplay.StatusLabel(r.Status)</span></td>
                             <td>@r.Source</td>
                         </tr>
                     }

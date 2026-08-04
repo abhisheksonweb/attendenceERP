@@ -52,7 +52,7 @@
             <div class="col-md-6">
                 <label asp-for="MinAttendanceMinutes" class="form-label"></label>
                 <input asp-for="MinAttendanceMinutes" class="form-control" type="number" min="1" max="1440" placeholder="45" />
-                <div class="form-text">Optional — below this time = Partially Present (not Present). If blank, uses 50% of max duration.</div>
+                <div class="form-text">Optional — Present requires this much <strong>total stay time</strong> (sum of visits, not first-in to last-out). If blank, uses 50% of max duration.</div>
             </div>
             <div class="col-12">
                 <label asp-for="Description" class="form-label"></label>

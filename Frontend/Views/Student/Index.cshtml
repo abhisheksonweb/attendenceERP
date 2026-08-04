@@ -166,7 +166,7 @@
                 statusEl.className = 'badge text-bg-success';
                 statusEl.textContent = 'Present today';
                 metaEl.textContent = (data.todaySource || '') + (data.todayRemarks ? ' · ' + data.todayRemarks : '');
-            } else if (data.todayPartial || (data.todayStatus || '').toLowerCase() === 'partialabsent') {
+            } else if (data.todayPartial || ['partialabsent','partiallypresent'].includes((data.todayStatus || '').toLowerCase().replace(/\s+/g, ''))) {
                 statusEl.className = 'badge text-bg-warning';
                 statusEl.textContent = data.todayStatusLabel || 'Partially Present';
                 metaEl.textContent = (data.todaySource || '') + (data.todayRemarks ? ' · ' + data.todayRemarks : '');

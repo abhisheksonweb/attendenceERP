@@ -1,3 +1,4 @@
+using System.Globalization;
 using MedicalCollege.Application.Interfaces;
 using MedicalCollege.Domain.Entities;
 using MedicalCollege.Domain.Enums;
@@ -9,8 +10,9 @@ using Microsoft.Extensions.Logging;
 namespace MedicalCollege.Infrastructure.Frm;
 
 /// <summary>
-/// Pulls live FRModule IN/OUT into portal attendance, applies min-attendance
-/// (partially present) rules, and optionally pushes to college ERP.
+/// Pulls live FRModule IN/OUT into portal attendance.
+/// Present / Partially Present is decided from TOTAL time stayed
+/// (sum of each IN→OUT visit), NEVER from first-in to last-out wall-clock span.
 /// </summary>
 public class FrmAttendanceSyncWorker : BackgroundService
 {
@@ -55,11 +57,15 @@ public class FrmAttendanceSyncWorker : BackgroundService
 
         var allStudents = await students.GetAllAsync();
         var today = DateTime.Today;
+        var dayKey = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         foreach (var cls in allClasses)
         {
             var rows = await frm.GetClassAttendanceAsync(cls.FrmClassId!.Value, ct);
             if (rows is null || rows.Count == 0) continue;
+
+            // Sum each visit's duration for today (gaps while OUT are excluded).
+            var stayByKey = await BuildTotalStaySecondsAsync(frm, cls.FrmClassId!.Value, dayKey, ct);
 
             var classStudents = allStudents.Where(s => s.ClassId == cls.Id && s.IsActive).ToList();
             var existingToday = (await attendance.GetByDateAsync(today)).ToList();
@@ -77,23 +83,19 @@ public class FrmAttendanceSyncWorker : BackgroundService
 
                 if (student is null) continue;
 
-                var durationSeconds = CapDurationSeconds(row.TimeInClassSeconds, cls.MaxClassDurationMinutes);
-                var durationLabel = string.IsNullOrWhiteSpace(row.TimeInClass)
-                    ? FormatDuration(durationSeconds)
-                    : row.TimeInClass;
-                if (cls.MaxClassDurationMinutes is > 0 &&
-                    durationSeconds >= cls.MaxClassDurationMinutes.Value * 60)
-                {
-                    durationLabel = FormatDuration(durationSeconds);
-                }
+                var staySeconds = ResolveStaySeconds(row, student, stayByKey);
+                var durationSeconds = CapDurationSeconds(staySeconds, cls.MaxClassDurationMinutes);
+                var durationLabel = FormatDuration(durationSeconds);
 
                 var isPartial = IsPartiallyPresent(minMinutes, durationSeconds);
-                // Do not mark Present until attended minutes meet the class minimum
-                // (or default 50% of max duration when min is not set).
                 var status = isPartial ? AttendanceStatus.PartialAbsent : AttendanceStatus.Present;
+                var faceOut = string.Equals(row.Status, "OUT", StringComparison.OrdinalIgnoreCase);
+                var lastOutDisplay = faceOut && !string.IsNullOrWhiteSpace(row.LastOut) && row.LastOut != "-"
+                    ? row.LastOut
+                    : null;
                 var remark = isPartial
-                    ? $"Face {row.Status}; In {row.FirstIn}; Out {row.LastOut}; Duration {durationLabel}; Partially present (< {minMinutes} min)"
-                    : $"Face {row.Status}; In {row.FirstIn}; Out {row.LastOut}; Duration {durationLabel}";
+                    ? $"Face {row.Status}; First In {row.FirstIn}; Last Out {lastOutDisplay ?? "—"}; Total stay {durationLabel}; Partially present (< {minMinutes} min total)"
+                    : $"Face {row.Status}; First In {row.FirstIn}; Last Out {lastOutDisplay ?? "—"}; Total stay {durationLabel}";
 
                 var record = existingToday.FirstOrDefault(r => r.StudentId == student.Id && r.Date.Date == today);
                 var isNew = record is null;
@@ -113,7 +115,7 @@ public class FrmAttendanceSyncWorker : BackgroundService
                         MarkedBy = "FRModule",
                         Remarks = remark,
                         FirstIn = row.FirstIn,
-                        LastOut = row.LastOut,
+                        LastOut = lastOutDisplay,
                         Duration = durationLabel,
                         DurationSeconds = durationSeconds,
                         EarlyLeave = isPartial,
@@ -129,7 +131,7 @@ public class FrmAttendanceSyncWorker : BackgroundService
                     record.StudentName = student.Name;
                     record.Remarks = remark;
                     record.FirstIn = row.FirstIn;
-                    record.LastOut = row.LastOut;
+                    record.LastOut = lastOutDisplay;
                     record.Duration = durationLabel;
                     record.DurationSeconds = durationSeconds;
                     record.EarlyLeave = isPartial;
@@ -145,7 +147,7 @@ public class FrmAttendanceSyncWorker : BackgroundService
                         await notifications.CreateAsync(
                             cls.AdminUserId!,
                             "Partially present",
-                            $"{student.Name} ({student.StudentId}) has {durationLabel} in {cls.Name} (minimum {minMinutes} min for Present).",
+                            $"{student.Name} ({student.StudentId}) total stay {durationLabel} in {cls.Name} (minimum {minMinutes} min for Present).",
                             NotificationType.ParentEarlyLeaveAlert,
                             $"/Admin/AttendanceLog/{cls.Id}",
                             ct,
@@ -160,8 +162,79 @@ public class FrmAttendanceSyncWorker : BackgroundService
     }
 
     /// <summary>
-    /// Attended time uses sum of IN→OUT sessions from FR (not first-in/last-out span).
-    /// Below the effective minimum ⇒ Partially Present (never Present yet).
+    /// Sum session lengths for each student today. Gaps between OUT and next IN are not counted.
+    /// </summary>
+    private static async Task<Dictionary<string, int>> BuildTotalStaySecondsAsync(
+        IFrmClient frm, int frmClassId, string dayKey, CancellationToken ct)
+    {
+        var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var sessions = await frm.GetClassSessionsAsync(frmClassId, ct);
+        if (sessions is null || sessions.Count == 0)
+            return map;
+
+        var now = DateTime.Now;
+        foreach (var s in sessions.Where(x => string.Equals(x.Date, dayKey, StringComparison.Ordinal)))
+        {
+            var secs = SessionDurationSeconds(s.EntryTs, s.ExitTs, now);
+            if (secs <= 0) continue;
+
+            void Add(string? key)
+            {
+                if (string.IsNullOrWhiteSpace(key)) return;
+                map[key] = map.TryGetValue(key, out var cur) ? cur + secs : secs;
+            }
+
+            Add(s.ExternalId);
+            Add(s.RollNo);
+        }
+
+        return map;
+    }
+
+    private static int ResolveStaySeconds(
+        FrmAttendanceRow row,
+        Student student,
+        IReadOnlyDictionary<string, int> stayByKey)
+    {
+        // Prefer summed visit durations from session list (excludes OUT gaps).
+        if (!string.IsNullOrWhiteSpace(row.ExternalId) &&
+            stayByKey.TryGetValue(row.ExternalId, out var byExt) && byExt > 0)
+            return byExt;
+        if (!string.IsNullOrWhiteSpace(student.Id) &&
+            stayByKey.TryGetValue(student.Id, out var byId) && byId > 0)
+            return byId;
+        if (!string.IsNullOrWhiteSpace(row.RollNo) &&
+            stayByKey.TryGetValue(row.RollNo, out var byRoll) && byRoll > 0)
+            return byRoll;
+        if (!string.IsNullOrWhiteSpace(student.StudentId) &&
+            stayByKey.TryGetValue(student.StudentId, out var byCode) && byCode > 0)
+            return byCode;
+
+        // Fallback: FR dashboard already sums sessions into time_in_class_seconds.
+        return Math.Max(0, row.TimeInClassSeconds);
+    }
+
+    private static int SessionDurationSeconds(string? entryTs, string? exitTs, DateTime now)
+    {
+        if (string.IsNullOrWhiteSpace(entryTs))
+            return 0;
+
+        if (!DateTime.TryParse(entryTs, CultureInfo.InvariantCulture, DateTimeStyles.None, out var start) &&
+            !DateTime.TryParse(entryTs, out start))
+            return 0;
+
+        DateTime end;
+        if (string.IsNullOrWhiteSpace(exitTs) || exitTs == "-")
+            end = now;
+        else if (!DateTime.TryParse(exitTs, CultureInfo.InvariantCulture, DateTimeStyles.None, out end) &&
+                 !DateTime.TryParse(exitTs, out end))
+            end = now;
+
+        return Math.Max(0, (int)(end - start).TotalSeconds);
+    }
+
+    /// <summary>
+    /// Below minimum total stay minutes ⇒ Partially Present (not Present).
     /// </summary>
     internal static bool IsPartiallyPresent(int? minMinutes, int durationSeconds)
     {
@@ -193,10 +266,12 @@ public class FrmAttendanceSyncWorker : BackgroundService
 
     private static string FormatDuration(int seconds)
     {
-        if (seconds <= 0) return "0m";
+        if (seconds <= 0) return "0s";
         var ts = TimeSpan.FromSeconds(seconds);
         if (ts.TotalHours >= 1)
             return $"{(int)ts.TotalHours}h {ts.Minutes}m";
-        return $"{(int)ts.TotalMinutes}m";
+        if (ts.TotalMinutes >= 1)
+            return ts.Seconds > 0 ? $"{(int)ts.TotalMinutes}m {ts.Seconds}s" : $"{(int)ts.TotalMinutes}m";
+        return $"{ts.Seconds}s";
     }
 }

@@ -163,7 +163,7 @@ public class StudentController : Controller
             (today.Status.Equals("Present", StringComparison.OrdinalIgnoreCase)
              || today.Status.Equals("Late", StringComparison.OrdinalIgnoreCase));
         var todayPartial = today is not null &&
-            today.Status.Equals("PartialAbsent", StringComparison.OrdinalIgnoreCase);
+            AttendanceDisplay.IsPartiallyPresent(today.Status);
         return Json(new
         {
             ok = true,

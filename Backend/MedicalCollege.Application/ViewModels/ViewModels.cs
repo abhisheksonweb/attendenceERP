@@ -322,6 +322,8 @@ public class StudentImportResultViewModel
     public int TotalRows { get; set; }
     public int SuccessCount { get; set; }
     public int FailedCount { get; set; }
+    /// <summary>True when validation found errors and no students were added.</summary>
+    public bool AbortedDueToErrors { get; set; }
     public IReadOnlyList<string> AffectedClassIds { get; set; } = Array.Empty<string>();
     public IReadOnlyList<StudentImportRowResult> Rows { get; set; } = Array.Empty<StudentImportRowResult>();
 }

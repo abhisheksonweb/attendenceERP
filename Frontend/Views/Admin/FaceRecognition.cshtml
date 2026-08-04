@@ -169,11 +169,12 @@ else
         const firstIn = r.firstIn || '—';
         const lastOut = r.lastOut || '—';
         const duration = r.duration || '—';
-        const isPartial = status === 'PartialAbsent' || r.earlyLeave;
+        const statusNorm = (status || '').toLowerCase().replace(/\s+/g, '');
+        const isPartial = statusNorm === 'partialabsent' || statusNorm === 'partiallypresent' || r.earlyLeave;
         const badge = status === 'Present' || status === 'Late'
           ? 'text-bg-success'
           : (isPartial ? 'text-bg-warning' : 'text-bg-danger');
-        const statusLabel = status === 'PartialAbsent' ? 'Partially Present' : status;
+        const statusLabel = isPartial ? 'Partially Present' : status;
         return '<tr><td><div class="fw-semibold">' + name + '</div><div class="small text-muted">' + code + '</div></td>'
           + '<td><span class="badge ' + badge + '">' + statusLabel + '</span><div class="small text-muted">' + (r.remarks || '') + '</div></td>'
           + '<td class="text-success">' + firstIn + '</td>'

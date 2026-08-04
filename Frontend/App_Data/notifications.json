@@ -34,5 +34,77 @@
     "classId": "a89f9ef2679c4e7c8cdfcc3706878d72",
     "className": "Physics",
     "createdAt": "2026-08-04T10:30:27.6691734Z"
+  },
+  {
+    "id": "f962b25c994443ab9acc6d9b5df42fe4",
+    "userId": "23472e558c024c63aedf7eb003680c35",
+    "title": "Face Enrolled",
+    "message": "Your face has been registered successfully for attendance recognition.",
+    "type": 7,
+    "isRead": false,
+    "linkUrl": "/Student/FaceEnrollment",
+    "classId": null,
+    "className": null,
+    "createdAt": "2026-08-04T10:47:15.4577646Z"
+  },
+  {
+    "id": "19ccd2e99bf84968b9bd3234b6428515",
+    "userId": "a8b52368c3954ba88b992f71f54053e5",
+    "title": "Welcome to Medical College Attendance",
+    "message": "Your student account has been created. Student ID: 26-Mbbs-001. Login email: riya.sharma@example.com. Temporary password: Temp@123.",
+    "type": 6,
+    "isRead": false,
+    "linkUrl": "/Account/Login",
+    "classId": null,
+    "className": null,
+    "createdAt": "2026-08-04T11:12:47.1306998Z"
+  },
+  {
+    "id": "a5894de58d4a4aa0b054590cfea0b8c1",
+    "userId": "1b4557bd497043a2bfe598a1c5cf45f7",
+    "title": "Welcome to Medical College Attendance",
+    "message": "Your student account has been created. Student ID: 26-Btech-001. Login email: chhaya@yopmail.com. Temporary password: cB2NGccQwi.",
+    "type": 6,
+    "isRead": false,
+    "linkUrl": "/Account/Login",
+    "classId": null,
+    "className": null,
+    "createdAt": "2026-08-04T12:01:13.8783989Z"
+  },
+  {
+    "id": "a739efddbcc24fcd921df5eac4c4b233",
+    "userId": "1b4557bd497043a2bfe598a1c5cf45f7",
+    "title": "Face Enrolled",
+    "message": "Your face has been registered successfully for attendance recognition.",
+    "type": 7,
+    "isRead": false,
+    "linkUrl": "/Student/FaceEnrollment",
+    "classId": null,
+    "className": null,
+    "createdAt": "2026-08-04T12:02:33.6393545Z"
+  },
+  {
+    "id": "a6dd2da29ce042b6bbed95a88c25c468",
+    "userId": "fa57031faf244b9a871781686d1fce2d",
+    "title": "Partially present",
+    "message": "Chhaya (26-Btech-001) total stay 1s in Physics (minimum 30 min for Present).",
+    "type": 10,
+    "isRead": false,
+    "linkUrl": "/Admin/AttendanceLog/a89f9ef2679c4e7c8cdfcc3706878d72",
+    "classId": "a89f9ef2679c4e7c8cdfcc3706878d72",
+    "className": "Physics",
+    "createdAt": "2026-08-04T12:02:46.6606417Z"
+  },
+  {
+    "id": "61fe17d1777f4be583191dde45b9e344",
+    "userId": "fa57031faf244b9a871781686d1fce2d",
+    "title": "Parent alert: Absence",
+    "message": "Chhaya (26-Btech-001) was marked Absent for Physics on 04 Aug 2026. (No guardian contact on file.)",
+    "type": 9,
+    "isRead": false,
+    "linkUrl": "/Admin/ParentAlerts?classId=a89f9ef2679c4e7c8cdfcc3706878d72",
+    "classId": "a89f9ef2679c4e7c8cdfcc3706878d72",
+    "className": "Physics",
+    "createdAt": "2026-08-04T12:30:22.3674637Z"
   }
 ]

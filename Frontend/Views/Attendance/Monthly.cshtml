@@ -66,12 +66,12 @@
                 {
                     foreach (var r in Model.OrderByDescending(x => x.Date))
                     {
-                        var cls = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ? "text-bg-success" : "text-bg-danger";
+                        var cls = AttendanceDisplay.BadgeClass(r.Status);
                         <tr>
                             <td>@r.Date.ToString("dd MMM yyyy")</td>
                             <td><strong>@r.StudentName</strong><br /><small class="text-muted">@r.StudentCode</small></td>
                             <td>@r.Department</td>
-                            <td><span class="badge @cls">@r.Status</span></td>
+                            <td><span class="badge @cls">@AttendanceDisplay.StatusLabel(r.Status)</span></td>
                             <td>@r.Source</td>
                         </tr>
                     }

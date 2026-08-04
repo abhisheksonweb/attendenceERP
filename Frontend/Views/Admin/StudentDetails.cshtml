@@ -85,10 +85,10 @@
                 {
                     foreach (var r in attendance.OrderByDescending(x => x.Date))
                     {
-                        var badgeClass = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ? "text-bg-success" : "text-bg-danger";
+                        var badgeClass = AttendanceDisplay.BadgeClass(r.Status);
                         <tr>
                             <td>@r.Date.ToString("dd MMM yyyy")</td>
-                            <td><span class="badge @badgeClass">@r.Status</span></td>
+                            <td><span class="badge @badgeClass">@AttendanceDisplay.StatusLabel(r.Status)</span></td>
                             <td class="text-success">@(r.FirstIn ?? "—")</td>
                             <td class="text-danger">@(r.LastOut ?? "—")</td>
                             <td>@r.Source</td>

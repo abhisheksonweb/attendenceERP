@@ -211,7 +211,7 @@ public class AttendanceService : IAttendanceService
         Department = record.Department,
         Course = record.Course,
         Date = record.Date,
-        Status = record.Status.ToString(),
+        Status = AttendanceFormatting.ToDisplayStatus(record.Status),
         Source = record.Source,
         Remarks = record.Remarks,
         FirstIn = record.FirstIn,

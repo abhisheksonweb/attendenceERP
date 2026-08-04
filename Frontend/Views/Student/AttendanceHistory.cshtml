@@ -48,6 +48,7 @@
                     <th>Status</th>
                     <th>In</th>
                     <th>Out</th>
+                    <th>Duration</th>
                     <th>Source</th>
                     <th>Department</th>
                     <th>Course</th>
@@ -70,6 +71,7 @@
                             <td><span class="badge @cls">@AttendanceDisplay.StatusLabel(r.Status)</span></td>
                             <td class="text-success">@(r.FirstIn ?? "—")</td>
                             <td class="text-danger">@(r.LastOut ?? "—")</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.Duration) ? "—" : r.Duration)</td>
                             <td>@r.Source</td>
                             <td>@r.Department</td>
                             <td>@r.Course</td>
@@ -133,7 +135,7 @@
                 }
                 else
                 {
-                    <tr><td colspan="8" class="text-center text-muted py-5">No attendance records found.</td></tr>
+                    <tr><td colspan="9" class="text-center text-muted py-5">No attendance records found.</td></tr>
                 }
             </tbody>
         </table>
