@@ -5,6 +5,7 @@
     ViewData["Subtitle"] = "View and manage attendance records";
     var date = ViewBag.Date as DateTime? ?? DateTime.Today;
     var stats = ViewBag.Stats as AttendanceStats;
+    var statusFilter = ViewBag.StatusFilter as string ?? "";
     var visitLogs = ViewBag.VisitLogs as List<DailyVisitLogRow> ?? new List<DailyVisitLogRow>();
     var visitCounts = ViewBag.VisitCounts as Dictionary<string, int>
                       ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -42,14 +43,43 @@
 
 <div class="mc-card mb-3">
     <form method="get" asp-controller="Attendance" asp-action="Index" class="row g-2 align-items-end" id="attendanceDateForm">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label">Select Date</label>
             <input type="date" name="date" id="attendanceDate" value="@date.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select name="status" id="attendanceStatus" class="form-select" onchange="this.form.submit()">
+                @if (string.IsNullOrWhiteSpace(statusFilter))
+                {
+                    <option value="" selected>All</option>
+                }
+                else
+                {
+                    <option value="">All</option>
+                }
+                @if (string.Equals(statusFilter, "Present", StringComparison.OrdinalIgnoreCase))
+                {
+                    <option value="Present" selected>Present</option>
+                }
+                else
+                {
+                    <option value="Present">Present</option>
+                }
+                @if (string.Equals(statusFilter, "Absent", StringComparison.OrdinalIgnoreCase))
+                {
+                    <option value="Absent" selected>Absent</option>
+                }
+                else
+                {
+                    <option value="Absent">Absent</option>
+                }
+            </select>
         </div>
         <div class="col-md-2">
             <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i> Load</button>
         </div>
-        <div class="col-md-6 text-md-end">
+        <div class="col-md-4 text-md-end">
             <div class="btn-group">
                 <a asp-action="Monthly" class="btn btn-outline-primary btn-sm">Monthly</a>
                 <a asp-action="Calendar" class="btn btn-outline-primary btn-sm">Calendar</a>
@@ -118,7 +148,13 @@
 </div>
 
 <div class="mc-card">
-    <h5 class="mb-3"><i class="bi bi-calendar-check me-2 text-primary"></i>Daily summary for @date.ToString("dddd, dd MMMM yyyy")</h5>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h5 class="mb-0"><i class="bi bi-calendar-check me-2 text-primary"></i>Daily summary for @date.ToString("dddd, dd MMMM yyyy")</h5>
+        @if (!string.IsNullOrWhiteSpace(statusFilter))
+        {
+            <span class="badge text-bg-secondary">Filter: @statusFilter · @Model.Count record(s)</span>
+        }
+    </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead>
@@ -140,14 +176,17 @@
                 {
                     foreach (var r in Model.OrderBy(x => x.StudentName))
                     {
-                        var cls = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ? "text-bg-success" : "text-bg-danger";
+                        var isPresent = AttendanceDisplay.IsFullyPresent(r.Status);
+                        var isPartial = AttendanceDisplay.IsPartiallyPresent(r.Status);
+                        var cls = AttendanceDisplay.BadgeClass(r.Status);
+                        var statusLabel = AttendanceDisplay.StatusLabel(r.Status);
                         visitCounts.TryGetValue(r.StudentCode ?? "", out var visits);
                         <tr>
                             <td>@r.StudentCode</td>
                             <td><strong>@r.StudentName</strong></td>
                             <td>@r.Department</td>
                             <td>@r.Course</td>
-                            <td><span class="badge @cls">@r.Status</span></td>
+                            <td><span class="badge @cls">@statusLabel</span></td>
                             <td>
                                 @if (visits > 0)
                                 {
@@ -167,7 +206,11 @@
                 }
                 else
                 {
-                    <tr><td colspan="10" class="text-center text-muted py-4">No attendance marked on @date.ToString("dd MMM yyyy"). Present/Absent stay 0 until face recognition or manual mark for that day.</td></tr>
+                    <tr><td colspan="10" class="text-center text-muted py-4">
+                        @(string.IsNullOrWhiteSpace(statusFilter)
+                            ? $"No attendance marked on {date:dd MMM yyyy}. Present/Absent stay 0 until face recognition or manual mark for that day."
+                            : $"No {statusFilter.ToLowerInvariant()} records on {date:dd MMM yyyy}.")
+                    </td></tr>
                 }
             </tbody>
         </table>

@@ -25,7 +25,7 @@ public class AttendanceController : Controller
     }
 
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Index(string? date)
+    public async Task<IActionResult> Index(string? date, string? status)
     {
         // Bind as string so yyyy-MM-dd from <input type="date"> is reliable across cultures.
         var selected = DateTime.TryParseExact(
@@ -38,10 +38,28 @@ public class AttendanceController : Controller
             : DateTime.Today;
 
         var records = await _attendance.GetDailyAsync(selected);
+        var statusFilter = (status ?? "").Trim();
+        if (!string.IsNullOrEmpty(statusFilter))
+        {
+            records = statusFilter.Equals("Present", StringComparison.OrdinalIgnoreCase)
+                ? records.Where(r =>
+                        r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ||
+                        r.Status.Equals("Late", StringComparison.OrdinalIgnoreCase))
+                    .ToList()
+                : statusFilter.Equals("Absent", StringComparison.OrdinalIgnoreCase)
+                    ? records.Where(r =>
+                            r.Status.Equals("Absent", StringComparison.OrdinalIgnoreCase) ||
+                            r.Status.Equals("PartialAbsent", StringComparison.OrdinalIgnoreCase))
+                        .ToList()
+                    : records.Where(r => r.Status.Equals(statusFilter, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+        }
+
         var dayKey = selected.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         var visitLogs = await LoadVisitLogsForDateAsync(dayKey);
 
         ViewBag.Date = selected;
+        ViewBag.StatusFilter = statusFilter;
         ViewBag.Stats = await _attendance.GetDailyStatsAsync(selected);
         ViewBag.VisitLogs = visitLogs;
         ViewBag.VisitCounts = visitLogs

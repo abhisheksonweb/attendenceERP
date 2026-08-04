@@ -285,12 +285,6 @@ public class AdminController : Controller
         }
 
         ViewBag.ClassName = $"{cls.Name} ({cls.Code})";
-        ViewBag.Departments = classes
-            .Select(c => c.Department)
-            .Where(d => !string.IsNullOrWhiteSpace(d))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(d => d)
-            .ToList();
         var nextId = await _students.GenerateNextStudentIdAsync(cls.Course, cls.Department);
         return View(new StudentFormViewModel
         {
@@ -311,19 +305,24 @@ public class AdminController : Controller
     {
         var classes = await _classes.GetAllAsync();
         ViewBag.Classes = classes;
-        ViewBag.Departments = classes
-            .Select(c => c.Department)
-            .Where(d => !string.IsNullOrWhiteSpace(d))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(d => d)
-            .ToList();
         var cls = classes.FirstOrDefault(c => c.Id == model.ClassId);
         ViewBag.ClassName = cls is null ? null : $"{cls.Name} ({cls.Code})";
+
+        // Department / course / semester come from the class — not collected on this form.
+        if (cls is not null)
+        {
+            model.Department = cls.Department;
+            model.Course = cls.Course;
+            model.Semester = cls.Semester;
+        }
 
         ModelState.Remove(nameof(model.Username));
         ModelState.Remove(nameof(model.StudentId));
         ModelState.Remove(nameof(model.EnrollmentNumber));
         ModelState.Remove(nameof(model.TemporaryPassword));
+        ModelState.Remove(nameof(model.Department));
+        ModelState.Remove(nameof(model.Course));
+        ModelState.Remove(nameof(model.Semester));
 
         if (!ModelState.IsValid) return View(model);
 
@@ -333,12 +332,12 @@ public class AdminController : Controller
         var result = await _students.CreateStudentAsync(model, User.GetUserId(), User.GetDisplayName());
         if (!result.Success)
         {
-            ModelState.AddModelError(string.Empty, result.Message ?? "Unable to create student.");
+            var err = result.Message ?? "Unable to create student.";
+            ModelState.AddModelError(string.Empty, err);
+            TempData["Error"] = err;
             if (cls is not null)
             {
-                model.StudentId = await _students.GenerateNextStudentIdAsync(
-                    string.IsNullOrWhiteSpace(model.Course) ? cls.Course : model.Course,
-                    string.IsNullOrWhiteSpace(model.Department) ? cls.Department : model.Department);
+                model.StudentId = await _students.GenerateNextStudentIdAsync(cls.Course, cls.Department);
                 model.EnrollmentNumber = model.StudentId;
             }
             return View(model);
@@ -370,12 +369,6 @@ public class AdminController : Controller
         if (student is null) return NotFound();
         var classes = await _classes.GetAllAsync();
         ViewBag.Classes = classes;
-        ViewBag.Departments = classes
-            .Select(c => c.Department)
-            .Where(d => !string.IsNullOrWhiteSpace(d))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(d => d)
-            .ToList();
         return View(student);
     }
 
@@ -385,13 +378,17 @@ public class AdminController : Controller
     {
         var classes = await _classes.GetAllAsync();
         ViewBag.Classes = classes;
-        ViewBag.Departments = classes
-            .Select(c => c.Department)
-            .Where(d => !string.IsNullOrWhiteSpace(d))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(d => d)
-            .ToList();
+        var cls = classes.FirstOrDefault(c => c.Id == model.ClassId);
+        if (cls is not null)
+        {
+            model.Department = cls.Department;
+            model.Course = cls.Course;
+            model.Semester = cls.Semester;
+        }
         ModelState.Remove(nameof(model.Username));
+        ModelState.Remove(nameof(model.Department));
+        ModelState.Remove(nameof(model.Course));
+        ModelState.Remove(nameof(model.Semester));
         if (!ModelState.IsValid) return View(model);
 
         // Keep existing profile picture; admin face file only updates FRModule enrollment.
@@ -400,7 +397,9 @@ public class AdminController : Controller
         var result = await _students.UpdateStudentAsync(model, User.GetUserId(), User.GetDisplayName());
         if (!result.Success)
         {
-            ModelState.AddModelError(string.Empty, result.Message ?? "Update failed.");
+            var err = result.Message ?? "Update failed.";
+            ModelState.AddModelError(string.Empty, err);
+            TempData["Error"] = err;
             return View(model);
         }
         if (!string.IsNullOrWhiteSpace(model.ClassId))

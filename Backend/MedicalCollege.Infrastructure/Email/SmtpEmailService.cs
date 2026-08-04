@@ -108,6 +108,80 @@ public class SmtpEmailService : IEmailService
             replyToEmail: fromAdminEmail);
     }
 
+    public Task<(bool Sent, string Detail)> SendParentAbsenceAlertAsync(
+        string toGuardianEmail,
+        string? guardianName,
+        string studentName,
+        string studentId,
+        string className,
+        string alertType,
+        string message,
+        DateTime alertDate,
+        string unsubscribeUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var greeting = string.IsNullOrWhiteSpace(guardianName)
+            ? "Dear Parent/Guardian"
+            : $"Dear {guardianName.Trim()}";
+        var typeLabel = string.IsNullOrWhiteSpace(alertType) ? "Attendance" : alertType.Trim();
+        var isAbsence = typeLabel.Equals("Absence", StringComparison.OrdinalIgnoreCase);
+        var heading = isAbsence ? "Absence alert" : $"{typeLabel} alert";
+        var statusText = isAbsence ? "Absent" : typeLabel;
+        var subject = isAbsence
+            ? $"Absence alert — {studentName} ({studentId}) — {alertDate:dd MMM yyyy}"
+            : $"Attendance alert: {typeLabel} — {studentName}";
+
+        var dailyNote = isAbsence
+            ? """
+              <p style="color:#555;font-size:14px;margin:0 0 16px">
+                This is the daily 6:00 PM absence notification from Medical College Attendance.
+              </p>
+              """
+            : "";
+
+        var html = $"""
+            <div style="font-family:Segoe UI,Arial,sans-serif;line-height:1.5;color:#1a1a1a;max-width:560px">
+              <h2 style="margin:0 0 12px;color:#0f4c81">{WebUtility.HtmlEncode(heading)}</h2>
+              <p>{WebUtility.HtmlEncode(greeting)},</p>
+              <p>{WebUtility.HtmlEncode(message)}</p>
+              <table style="border-collapse:collapse;margin:16px 0;width:100%;background:#f6f8fb;border-radius:8px">
+                <tr>
+                  <td style="padding:12px 16px;color:#555;width:40%">Student</td>
+                  <td style="padding:12px 16px"><strong>{WebUtility.HtmlEncode(studentName)}</strong></td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;color:#555;border-top:1px solid #e5eaf0">Student ID</td>
+                  <td style="padding:12px 16px;border-top:1px solid #e5eaf0"><strong>{WebUtility.HtmlEncode(studentId)}</strong></td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;color:#555;border-top:1px solid #e5eaf0">Class</td>
+                  <td style="padding:12px 16px;border-top:1px solid #e5eaf0"><strong>{WebUtility.HtmlEncode(className)}</strong></td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;color:#555;border-top:1px solid #e5eaf0">Date</td>
+                  <td style="padding:12px 16px;border-top:1px solid #e5eaf0"><strong>{alertDate:dd MMM yyyy}</strong></td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;color:#555;border-top:1px solid #e5eaf0">Status</td>
+                  <td style="padding:12px 16px;border-top:1px solid #e5eaf0">
+                    <strong style="color:{(isAbsence ? "#d64545" : "#0f4c81")}">{WebUtility.HtmlEncode(statusText)}</strong>
+                  </td>
+                </tr>
+              </table>
+              {dailyNote}
+              <p style="color:#666;font-size:13px;margin-top:24px">
+                If you no longer wish to receive these alerts,
+                <a href="{WebUtility.HtmlEncode(unsubscribeUrl)}" style="color:#0f4c81">unsubscribe here</a>.
+              </p>
+              <p style="color:#999;font-size:12px;margin-top:8px">
+                Medical College Attendance · Parent alerts
+              </p>
+            </div>
+            """;
+
+        return SendAsync(toGuardianEmail, subject, html, cancellationToken);
+    }
+
     public async Task<(bool Sent, string Detail)> SendAsync(
         string toEmail,
         string subject,

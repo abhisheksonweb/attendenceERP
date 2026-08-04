@@ -80,11 +80,8 @@
                         {
                             foreach (var r in Model.RecentAttendance)
                             {
-                                var isWeekOff = r.Status.Equals("WeekOff", StringComparison.OrdinalIgnoreCase);
-                                var cls = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ? "text-bg-success"
-                                    : isWeekOff ? "text-bg-secondary"
-                                    : "text-bg-danger";
-                                var label = isWeekOff ? "Week Off" : r.Status;
+                                var cls = AttendanceDisplay.BadgeClass(r.Status);
+                                var label = AttendanceDisplay.StatusLabel(r.Status);
                                 <tr>
                                     <td>@r.Date.ToString("dd MMM yyyy")</td>
                                     <td><span class="badge @cls">@label</span></td>
@@ -169,9 +166,13 @@
                 statusEl.className = 'badge text-bg-success';
                 statusEl.textContent = 'Present today';
                 metaEl.textContent = (data.todaySource || '') + (data.todayRemarks ? ' · ' + data.todayRemarks : '');
+            } else if (data.todayPartial || (data.todayStatus || '').toLowerCase() === 'partialabsent') {
+                statusEl.className = 'badge text-bg-warning';
+                statusEl.textContent = data.todayStatusLabel || 'Partially Present';
+                metaEl.textContent = (data.todaySource || '') + (data.todayRemarks ? ' · ' + data.todayRemarks : '');
             } else if (data.todayStatus) {
                 statusEl.className = 'badge text-bg-danger';
-                statusEl.textContent = data.todayStatus;
+                statusEl.textContent = data.todayStatusLabel || data.todayStatus;
                 metaEl.textContent = data.todaySource || '';
             } else {
                 statusEl.className = 'badge text-bg-secondary';
@@ -196,10 +197,11 @@
                 rowsEl.innerHTML = data.recent.map(function (r) {
                     var status = (r.status || '');
                     var lower = status.toLowerCase();
-                    var cls = lower === 'present' ? 'text-bg-success'
+                    var cls = lower === 'present' || lower === 'late' ? 'text-bg-success'
+                        : lower === 'partialabsent' ? 'text-bg-warning'
                         : lower === 'weekoff' ? 'text-bg-secondary'
                         : 'text-bg-danger';
-                    var label = lower === 'weekoff' ? 'Week Off' : status;
+                    var label = r.statusLabel || (lower === 'weekoff' ? 'Week Off' : lower === 'partialabsent' ? 'Partially Present' : status);
                     const d = r.date ? new Date(r.date) : null;
                     const dateLabel = d ? d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '';
                     return '<tr><td>' + dateLabel + '</td><td><span class="badge ' + cls + '">' + label + '</span></td><td>' + (r.source || '') + '</td></tr>';

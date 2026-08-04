@@ -10,7 +10,7 @@ namespace MedicalCollege.Infrastructure.Frm;
 
 /// <summary>
 /// Pulls live FRModule IN/OUT into portal attendance, applies min-attendance
-/// (partial absent) rules, and optionally pushes to college ERP.
+/// (partially present) rules, and optionally pushes to college ERP.
 /// </summary>
 public class FrmAttendanceSyncWorker : BackgroundService
 {
@@ -63,6 +63,7 @@ public class FrmAttendanceSyncWorker : BackgroundService
 
             var classStudents = allStudents.Where(s => s.ClassId == cls.Id && s.IsActive).ToList();
             var existingToday = (await attendance.GetByDateAsync(today)).ToList();
+            var minMinutes = EffectiveMinAttendanceMinutes(cls);
 
             foreach (var row in rows)
             {
@@ -86,10 +87,12 @@ public class FrmAttendanceSyncWorker : BackgroundService
                     durationLabel = FormatDuration(durationSeconds);
                 }
 
-                var isPartial = IsPartialAbsent(cls, row.Status, durationSeconds);
+                var isPartial = IsPartiallyPresent(minMinutes, durationSeconds);
+                // Do not mark Present until attended minutes meet the class minimum
+                // (or default 50% of max duration when min is not set).
                 var status = isPartial ? AttendanceStatus.PartialAbsent : AttendanceStatus.Present;
                 var remark = isPartial
-                    ? $"Face {row.Status}; In {row.FirstIn}; Out {row.LastOut}; Duration {durationLabel}; Partial absent (< {cls.MinAttendanceMinutes} min)"
+                    ? $"Face {row.Status}; In {row.FirstIn}; Out {row.LastOut}; Duration {durationLabel}; Partially present (< {minMinutes} min)"
                     : $"Face {row.Status}; In {row.FirstIn}; Out {row.LastOut}; Duration {durationLabel}";
 
                 var record = existingToday.FirstOrDefault(r => r.StudentId == student.Id && r.Date.Date == today);
@@ -122,8 +125,6 @@ public class FrmAttendanceSyncWorker : BackgroundService
                 }
                 else
                 {
-                    // While still IN, keep Present even if current elapsed is under minimum.
-                    // After OUT, apply partial-absent rule.
                     record!.Status = status;
                     record.StudentName = student.Name;
                     record.Remarks = remark;
@@ -131,20 +132,20 @@ public class FrmAttendanceSyncWorker : BackgroundService
                     record.LastOut = row.LastOut;
                     record.Duration = durationLabel;
                     record.DurationSeconds = durationSeconds;
-                    record.EarlyLeave = isPartial || record.EarlyLeave;
+                    record.EarlyLeave = isPartial;
                     record.Source = "FaceRecognition";
                     record.MarkedBy = "FRModule";
                     await attendance.UpdateAsync(record);
                 }
 
-                if (isPartial && !previousPartial)
+                if (isPartial && !previousPartial && minMinutes is >= 1)
                 {
                     if (!string.IsNullOrWhiteSpace(cls.AdminUserId))
                     {
                         await notifications.CreateAsync(
                             cls.AdminUserId!,
-                            "Partial absence detected",
-                            $"{student.Name} ({student.StudentId}) attended {durationLabel} in {cls.Name} (minimum {cls.MinAttendanceMinutes} min).",
+                            "Partially present",
+                            $"{student.Name} ({student.StudentId}) has {durationLabel} in {cls.Name} (minimum {minMinutes} min for Present).",
                             NotificationType.ParentEarlyLeaveAlert,
                             $"/Admin/AttendanceLog/{cls.Id}",
                             ct,
@@ -159,17 +160,27 @@ public class FrmAttendanceSyncWorker : BackgroundService
     }
 
     /// <summary>
-    /// After check-out, attended minutes below MinAttendanceMinutes → partial absent.
-    /// While still IN, do not flag (student may still meet the minimum).
+    /// Attended time uses sum of IN→OUT sessions from FR (not first-in/last-out span).
+    /// Below the effective minimum ⇒ Partially Present (never Present yet).
     /// </summary>
-    internal static bool IsPartialAbsent(ClassRoom cls, string faceStatus, int durationSeconds)
+    internal static bool IsPartiallyPresent(int? minMinutes, int durationSeconds)
     {
-        if (!faceStatus.Equals("OUT", StringComparison.OrdinalIgnoreCase))
-            return false;
-        if (cls.MinAttendanceMinutes is null or < 1)
+        if (minMinutes is null or < 1)
             return false;
         var attendedMinutes = durationSeconds / 60.0;
-        return attendedMinutes < cls.MinAttendanceMinutes.Value;
+        return attendedMinutes < minMinutes.Value;
+    }
+
+    /// <summary>
+    /// Admin min minutes if set; otherwise 50% of max class duration; otherwise no threshold.
+    /// </summary>
+    internal static int? EffectiveMinAttendanceMinutes(ClassRoom cls)
+    {
+        if (cls.MinAttendanceMinutes is >= 1)
+            return cls.MinAttendanceMinutes.Value;
+        if (cls.MaxClassDurationMinutes is > 0)
+            return Math.Max(1, (int)Math.Ceiling(cls.MaxClassDurationMinutes.Value * 0.5));
+        return null;
     }
 
     private static int CapDurationSeconds(int seconds, int? maxMinutes)
@@ -186,6 +197,6 @@ public class FrmAttendanceSyncWorker : BackgroundService
         var ts = TimeSpan.FromSeconds(seconds);
         if (ts.TotalHours >= 1)
             return $"{(int)ts.TotalHours}h {ts.Minutes}m";
-        return $"{ts.Minutes}m";
+        return $"{(int)ts.TotalMinutes}m";
     }
 }

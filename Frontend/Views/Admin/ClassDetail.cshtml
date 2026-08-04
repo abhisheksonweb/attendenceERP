@@ -86,14 +86,13 @@
                     <tbody>
                     @foreach (var a in Model.TodayAttendance)
                     {
-                        var statusBadge = a.Status == "PartialAbsent" ? "text-bg-warning"
-                            : (a.Status is "Present" or "Late" ? "text-bg-success" : "text-bg-secondary");
+                        var statusBadge = AttendanceDisplay.BadgeClass(a.Status);
                         <tr>
                             <td>
                                 <div>@a.StudentName</div>
                                 <div class="small text-muted">@a.Source</div>
                             </td>
-                            <td><span class="badge @statusBadge">@(a.Status == "PartialAbsent" ? "Partial Absent" : a.Status)</span></td>
+                            <td><span class="badge @statusBadge">@AttendanceDisplay.StatusLabel(a.Status)</span></td>
                             <td class="text-success">@(a.FirstIn ?? "—")</td>
                             <td class="text-danger">@(a.LastOut ?? "—")</td>
                             <td>@(a.Duration ?? "—")</td>

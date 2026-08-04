@@ -162,12 +162,16 @@ public class StudentController : Controller
         var todayPresent = today is not null &&
             (today.Status.Equals("Present", StringComparison.OrdinalIgnoreCase)
              || today.Status.Equals("Late", StringComparison.OrdinalIgnoreCase));
+        var todayPartial = today is not null &&
+            today.Status.Equals("PartialAbsent", StringComparison.OrdinalIgnoreCase);
         return Json(new
         {
             ok = true,
             syncedAt = DateTime.Now.ToString("HH:mm:ss"),
             todayPresent,
+            todayPartial,
             todayStatus = today?.Status ?? "",
+            todayStatusLabel = AttendanceDisplay.StatusLabel(today?.Status),
             todaySource = today?.Source ?? "",
             todayRemarks = today?.Remarks ?? "",
             attendancePercentage = stats.Percentage,
@@ -177,6 +181,7 @@ public class StudentController : Controller
             {
                 date = r.Date.ToString("yyyy-MM-dd"),
                 status = r.Status,
+                statusLabel = AttendanceDisplay.StatusLabel(r.Status),
                 source = r.Source,
                 remarks = r.Remarks
             })

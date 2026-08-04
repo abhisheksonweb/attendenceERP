@@ -59,17 +59,15 @@
                 {
                     foreach (var r in Model.OrderByDescending(x => x.Date))
                     {
-                        var isPresent = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase)
-                                        || r.Status.Equals("Late", StringComparison.OrdinalIgnoreCase);
+                        var isPresent = AttendanceDisplay.IsFullyPresent(r.Status);
+                        var isPartial = AttendanceDisplay.IsPartiallyPresent(r.Status);
                         var isWeekOff = r.Status.Equals("WeekOff", StringComparison.OrdinalIgnoreCase);
-                        var cls = isPresent ? "text-bg-success"
-                            : isWeekOff ? "text-bg-secondary"
-                            : "text-bg-danger";
+                        var cls = AttendanceDisplay.BadgeClass(r.Status);
                         var dateKey = r.Date.ToString("yyyy-MM-dd");
                         var hasPending = pendingDates.Contains(dateKey);
                         <tr>
                             <td>@r.Date.ToString("dddd, dd MMM yyyy")</td>
-                            <td><span class="badge @cls">@(isWeekOff ? "Week Off" : r.Status)</span></td>
+                            <td><span class="badge @cls">@AttendanceDisplay.StatusLabel(r.Status)</span></td>
                             <td class="text-success">@(r.FirstIn ?? "—")</td>
                             <td class="text-danger">@(r.LastOut ?? "—")</td>
                             <td>@r.Source</td>
@@ -84,11 +82,26 @@
                                 {
                                     <span class="text-muted small">—</span>
                                 }
-                                else if (!isPresent)
+                                else if (!isPresent && !isPartial)
                                 {
                                     <button type="button"
                                             class="btn btn-sm btn-outline-primary"
-                                            title="Request Present"
+                                            title="Request attendance review"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#reportAttendanceModal"
+                                            data-kind="AbsentCorrection"
+                                            data-date="@dateKey"
+                                            data-date-label="@r.Date.ToString("dd MMM yyyy")"
+                                            data-in="@ToHhMm(r.FirstIn)"
+                                            data-out="@ToHhMm(r.LastOut)">
+                                        <i class="bi bi-flag"></i>
+                                    </button>
+                                }
+                                else if (isPartial)
+                                {
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-warning"
+                                            title="Request attendance review (not fully Present yet)"
                                             data-bs-toggle="modal"
                                             data-bs-target="#reportAttendanceModal"
                                             data-kind="AbsentCorrection"

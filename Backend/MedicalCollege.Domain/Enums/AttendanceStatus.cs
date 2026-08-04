@@ -7,6 +7,6 @@ public enum AttendanceStatus
     Late = 3,
     Excused = 4,
     WeekOff = 5,
-    /// <summary>Checked in but attended less than the class minimum duration.</summary>
+    /// <summary>Checked in but attended less than the class minimum duration (shown as Partially Present).</summary>
     PartialAbsent = 6
 }

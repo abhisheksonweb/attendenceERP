@@ -92,15 +92,8 @@
                 {
                     foreach (var r in portal)
                     {
-                        var clsBadge = r.Status.Equals("Present", StringComparison.OrdinalIgnoreCase) ||
-                                       r.Status.Equals("Late", StringComparison.OrdinalIgnoreCase)
-                            ? "text-bg-success"
-                            : r.Status.Equals("PartialAbsent", StringComparison.OrdinalIgnoreCase)
-                                ? "text-bg-warning"
-                                : "text-bg-danger";
-                        var statusLabel = r.Status.Equals("PartialAbsent", StringComparison.OrdinalIgnoreCase)
-                            ? "Partial Absent"
-                            : r.Status;
+                        var clsBadge = AttendanceDisplay.BadgeClass(r.Status);
+                        var statusLabel = AttendanceDisplay.StatusLabel(r.Status);
                         <tr>
                             <td>@r.Date.ToString("dd MMM yyyy")</td>
                             <td class="fw-semibold">@r.StudentName</td>
@@ -109,7 +102,7 @@
                             <td class="text-success">@(r.FirstIn ?? "—")</td>
                             <td class="text-danger">@(r.LastOut ?? "—")</td>
                             <td>@(r.Duration ?? "—")</td>
-                            <td>@r.Source @(r.EarlyLeave || r.Status.Equals("PartialAbsent", StringComparison.OrdinalIgnoreCase) ? Html.Raw("<span class=\"badge text-bg-warning ms-1\">Partial absent</span>") : null)</td>
+                            <td>@r.Source @(r.EarlyLeave || AttendanceDisplay.IsPartiallyPresent(r.Status) ? Html.Raw("<span class=\"badge text-bg-warning ms-1\">Partially present</span>") : null)</td>
                             <td class="small text-muted">@(r.Remarks ?? "—")</td>
                         </tr>
                     }

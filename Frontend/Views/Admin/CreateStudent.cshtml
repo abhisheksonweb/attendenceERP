@@ -4,7 +4,6 @@
     ViewData["Subtitle"] = ViewBag.ClassName as string ?? "Register student into a class (batch)";
     var lockedClass = !string.IsNullOrWhiteSpace(Model.ClassId);
     var classes = ViewBag.Classes as IEnumerable<ClassFormViewModel> ?? Enumerable.Empty<ClassFormViewModel>();
-    var departments = ViewBag.Departments as IEnumerable<string> ?? Enumerable.Empty<string>();
 }
 
 <div class="row justify-content-center">
@@ -12,7 +11,6 @@
         <div class="mc-card">
             <form asp-action="CreateStudent" method="post" enctype="multipart/form-data" novalidate>
                 @Html.AntiForgeryToken()
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
 
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -84,30 +82,6 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <label asp-for="Department" class="form-label">Department <span class="text-danger">*</span></label>
-                        <select asp-for="Department" class="form-select" id="departmentSelect"
-                                data-selected="@Model.Department" required>
-                            <option value="">-- Select department --</option>
-                        </select>
-                        <span asp-validation-for="Department" class="text-danger small"></span>
-                    </div>
-                    <div class="col-md-4">
-                        <label asp-for="Course" class="form-label">Course <span class="text-danger">*</span></label>
-                        <select asp-for="Course" class="form-select" id="courseSelect"
-                                data-selected="@Model.Course" required disabled>
-                            <option value="">-- Select course --</option>
-                        </select>
-                        <span asp-validation-for="Course" class="text-danger small"></span>
-                    </div>
-                    <div class="col-md-4">
-                        <label asp-for="Semester" class="form-label">Semester <span class="text-danger">*</span></label>
-                        <select asp-for="Semester" class="form-select" id="semesterSelect"
-                                data-selected="@Model.Semester" required disabled>
-                            <option value="">-- Select semester --</option>
-                        </select>
-                        <span asp-validation-for="Semester" class="text-danger small"></span>
-                    </div>
-                    <div class="col-md-4">
                         <label asp-for="GuardianName" class="form-label">Guardian / Parent Name</label>
                         <input asp-for="GuardianName" class="form-control" />
                     </div>
@@ -165,29 +139,6 @@
         });
     }
 
-    const dept = document.getElementById('departmentSelect');
-    const classSelect = document.getElementById('ClassId');
-    const course = document.getElementById('Course');
-    const semester = document.getElementById('Semester');
-    if (dept && classSelect) {
-        dept.addEventListener('change', function () {
-            const selected = this.value;
-            Array.from(classSelect.options).forEach(function (opt) {
-                if (!opt.value) return;
-                const match = !selected || (opt.getAttribute('data-dept') || '').toLowerCase() === selected.toLowerCase();
-                opt.hidden = !match;
-            });
-        });
-    }
-    if (classSelect && course && semester) {
-        classSelect.addEventListener('change', function () {
-            const opt = classSelect.options[classSelect.selectedIndex];
-            if (!opt || !opt.value) return;
-            if (dept) dept.value = opt.getAttribute('data-dept') || dept.value;
-            course.value = opt.getAttribute('data-course') || course.value;
-            semester.value = opt.getAttribute('data-sem') || semester.value;
-        });
-    }
 })();
 </script>
 }

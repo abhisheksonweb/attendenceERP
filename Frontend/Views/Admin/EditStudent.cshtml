@@ -2,7 +2,6 @@
 @{
     ViewData["Title"] = "Edit Student";
     ViewData["Subtitle"] = Model.Name;
-    var departments = ViewBag.Departments as IEnumerable<string> ?? Enumerable.Empty<string>();
 }
 
 <div class="row justify-content-center">
@@ -12,7 +11,6 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="Id" />
                 <input type="hidden" asp-for="ProfilePhotoPath" />
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
 
                 <div class="mb-3 d-flex align-items-center gap-3">
                     <img id="photoPreview"
@@ -57,30 +55,6 @@
                     <div class="col-md-4">
                         <label asp-for="Gender" class="form-label">Gender <span class="text-danger">*</span></label>
                         <select asp-for="Gender" class="form-select" asp-items="Html.GetEnumSelectList<Gender>()"></select>
-                    </div>
-                    <div class="col-md-4">
-                        <label asp-for="Department" class="form-label">Department <span class="text-danger">*</span></label>
-                        <select asp-for="Department" class="form-select" id="departmentSelect"
-                                data-selected="@Model.Department" required>
-                            <option value="">-- Select department --</option>
-                        </select>
-                        <span asp-validation-for="Department" class="text-danger small"></span>
-                    </div>
-                    <div class="col-md-4">
-                        <label asp-for="Course" class="form-label">Course <span class="text-danger">*</span></label>
-                        <select asp-for="Course" class="form-select" id="courseSelect"
-                                data-selected="@Model.Course" required disabled>
-                            <option value="">-- Select course --</option>
-                        </select>
-                        <span asp-validation-for="Course" class="text-danger small"></span>
-                    </div>
-                    <div class="col-md-4">
-                        <label asp-for="Semester" class="form-label">Semester <span class="text-danger">*</span></label>
-                        <select asp-for="Semester" class="form-select" id="semesterSelect"
-                                data-selected="@Model.Semester" required disabled>
-                            <option value="">-- Select semester --</option>
-                        </select>
-                        <span asp-validation-for="Semester" class="text-danger small"></span>
                     </div>
                     <div class="col-md-4">
                         <label asp-for="GuardianName" class="form-label">Guardian / Parent Name</label>

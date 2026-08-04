@@ -172,8 +172,8 @@ else
         const isPartial = status === 'PartialAbsent' || r.earlyLeave;
         const badge = status === 'Present' || status === 'Late'
           ? 'text-bg-success'
-          : (isPartial || status === 'PartialAbsent' ? 'text-bg-warning' : 'text-bg-danger');
-        const statusLabel = status === 'PartialAbsent' ? 'Partial Absent' : status;
+          : (isPartial ? 'text-bg-warning' : 'text-bg-danger');
+        const statusLabel = status === 'PartialAbsent' ? 'Partially Present' : status;
         return '<tr><td><div class="fw-semibold">' + name + '</div><div class="small text-muted">' + code + '</div></td>'
           + '<td><span class="badge ' + badge + '">' + statusLabel + '</span><div class="small text-muted">' + (r.remarks || '') + '</div></td>'
           + '<td class="text-success">' + firstIn + '</td>'

@@ -38,13 +38,13 @@ public class ParentNotificationService : IParentNotificationService
     public Task<ServiceResult> NotifyAbsenceAsync(Student student, string className, DateTime date, CancellationToken ct = default)
     {
         var msg = $"{student.Name} ({student.StudentId}) was marked Absent for {className} on {date:dd MMM yyyy}.";
-        return SendAsync(student, className, "Absence", msg, NotificationType.ParentAbsenceAlert, notifyAdminInbox: true, ct);
+        return SendAsync(student, className, "Absence", msg, NotificationType.ParentAbsenceAlert, notifyAdminInbox: true, alertDate: date, ct);
     }
 
     public Task<ServiceResult> NotifyEarlyLeaveAsync(Student student, string className, string? outTime, CancellationToken ct = default)
     {
         var msg = $"{student.Name} ({student.StudentId}) left {className} early at {outTime ?? "unknown time"} (before class end).";
-        return SendAsync(student, className, "EarlyLeave", msg, NotificationType.ParentEarlyLeaveAlert, notifyAdminInbox: true, ct);
+        return SendAsync(student, className, "EarlyLeave", msg, NotificationType.ParentEarlyLeaveAlert, notifyAdminInbox: true, alertDate: DateTime.Today, ct);
     }
 
     public Task<ServiceResult> NotifyAttendanceUpdateAsync(
@@ -54,7 +54,7 @@ public class ParentNotificationService : IParentNotificationService
         var typeLabel = status.Equals("IN", StringComparison.OrdinalIgnoreCase) ? "CheckedIn"
             : status.Equals("OUT", StringComparison.OrdinalIgnoreCase) ? "CheckedOut"
             : "Update";
-        return SendAsync(student, className, typeLabel, msg, NotificationType.ParentAttendanceUpdate, notifyAdminInbox: false, ct);
+        return SendAsync(student, className, typeLabel, msg, NotificationType.ParentAttendanceUpdate, notifyAdminInbox: false, alertDate: DateTime.Today, ct);
     }
 
     public Task<IReadOnlyList<ParentAlert>> GetRecentAsync(int take = 100, CancellationToken ct = default) =>
@@ -79,6 +79,7 @@ public class ParentNotificationService : IParentNotificationService
         string message,
         NotificationType adminType,
         bool notifyAdminInbox,
+        DateTime alertDate,
         CancellationToken ct)
     {
         var recent = await _alerts.GetByStudentAsync(student.Id);
@@ -100,17 +101,16 @@ public class ParentNotificationService : IParentNotificationService
         {
             var baseUrl = (_config["ParentAlerts:PortalBaseUrl"] ?? "http://127.0.0.1:5148").TrimEnd('/');
             var unsubUrl = $"{baseUrl}/Account/UnsubscribeParentAlerts?token={Uri.EscapeDataString(student.Id)}";
-            var html = $@"
-<p>Dear Parent/Guardian,</p>
-<p>{System.Net.WebUtility.HtmlEncode(message)}</p>
-<p style='font-size:12px;color:#666;'>
-  If you no longer wish to receive these alerts,
-  <a href=""{unsubUrl}"">unsubscribe here</a>.
-</p>";
-            var (sent, detail) = await _email.SendAsync(
+            var (sent, detail) = await _email.SendParentAbsenceAlertAsync(
                 student.GuardianEmail!,
-                $"Attendance alert: {alertType} — {student.Name}",
-                html,
+                student.GuardianName,
+                student.Name,
+                student.StudentId,
+                className,
+                alertType,
+                message,
+                alertDate,
+                unsubUrl,
                 ct);
             delivered = sent;
             channel = "Email";

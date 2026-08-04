@@ -29,4 +29,17 @@ public interface IEmailService
         string? fromAdminEmail = null,
         string? fromAdminName = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Daily parent absence / attendance alert (guardian inbox).</summary>
+    Task<(bool Sent, string Detail)> SendParentAbsenceAlertAsync(
+        string toGuardianEmail,
+        string? guardianName,
+        string studentName,
+        string studentId,
+        string className,
+        string alertType,
+        string message,
+        DateTime alertDate,
+        string unsubscribeUrl,
+        CancellationToken cancellationToken = default);
 }

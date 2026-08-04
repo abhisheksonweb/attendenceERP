@@ -12,7 +12,8 @@ public class ClassRoom
     /// <summary>Maximum class length in minutes (e.g. 60).</summary>
     public int? MaxClassDurationMinutes { get; set; }
     /// <summary>
-    /// Minimum minutes a student must attend. Below this (after check-out) = Partially Absent.
+    /// Minimum minutes a student must attend. Below this = Partially Present (not Present).
+    /// If unset, defaults to 50% of max class duration.
     /// </summary>
     public int? MinAttendanceMinutes { get; set; }
     public string? AdminUserId { get; set; }
